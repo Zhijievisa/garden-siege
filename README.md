@@ -3,7 +3,7 @@
 A Trello Power-Up that draws a board as a battle map. Every card is an enemy unit advancing on your headquarters;
 every board member is a gun defending it. The nearer a unit is to headquarters, the sooner it needs you.
 
-Version 1.1.0 · English and 简体中文
+Version 1.2.0 · English and 简体中文
 
 ## What it shows
 
@@ -59,6 +59,11 @@ card creation, list moves, archiving and deletion. Nothing is sent anywhere else
 Opening `battle.html`, `settings.html`, `welcome.html` or `authorize.html` directly in a browser runs them in demo
 mode with a fictional board and a made-up history. Add `?auth=0` to see the not-yet-authorised state.
 
+## Releasing a change
+
+GitHub Pages lets browsers keep files for about ten minutes. Bump `GS.VERSION` and the `?v=` value on the script
+and style URLs in every `.html` file together, so users get one consistent set of files.
+
 ## Known limits
 
 - Reads open cards in open lists only, as provided by the Trello client library.
@@ -71,7 +76,9 @@ mode with a fictional board and a made-up history. Add `?auth=0` to see the not-
 
 ## Changelog
 
-**1.1.0** Replay from the board's activity history, with read-only authorisation. Military artwork: enemy units by
-label, guns for members.
+**1.2.0** Military artwork: enemy units chosen by label, guns for members. Label variants that share a number or a
+first word are one unit type. Renamed Siege Line.
+
+**1.1.0** Replay from the board's activity history, with read-only authorisation.
 
 **1.0.0** First version.

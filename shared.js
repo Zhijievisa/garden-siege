@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   var GS = root.GS = {};
-  GS.VERSION = '1.1.0';
+  GS.VERSION = '1.2.0';
   GS.CFG_KEY = 'cfg';
   // The Power-Up's public API key (Power-Up admin → Authorization → Trello Auth). Replay is hidden while this is empty.
   GS.APP_KEY = '';
@@ -114,7 +114,7 @@
   add('set_auto', 'Automatic', '自动');
   add('set_soon', 'Flag cards due within (days)', '到期提醒窗口（天）');
   add('set_zones', 'Which zone is each list?', '每一列对应哪个区域？');
-  add('set_zones_hint', 'Zones run from the house outwards. Lists you have not set are guessed from their names.', '区域由近到远排列。没有设置的列按列名猜测。');
+  add('set_zones_hint', 'Zones run from headquarters outwards. Lists you have not set are guessed from their names.', '区域由近到远排列。没有设置的列按列名猜测。');
   add('set_suggest', 'Use suggestions', '恢复建议值');
   add('set_save', 'Save', '保存');
   add('set_saved', 'Saved', '已保存');
