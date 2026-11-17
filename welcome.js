@@ -17,8 +17,8 @@
         h('div', { class: 'note info', text: tr('wel_data') }),
         h('div', { class: 'foot' }, [
           h('span', { class: 'muted small' }, [
-            h('a', { class: 'link', href: './support.html', target: '_blank', rel: 'noopener', text: tr('support') }), ' · ',
-            h('a', { class: 'link', href: './privacy.html', target: '_blank', rel: 'noopener', text: tr('privacy') })
+            h('a', { class: 'link', href: './support', target: '_blank', rel: 'noopener', text: tr('support') }), ' · ',
+            h('a', { class: 'link', href: './privacy', target: '_blank', rel: 'noopener', text: tr('privacy') })
           ]),
           h('span', { class: 'grow' }),
           h('button', { type: 'button', class: 'primary', text: tr('wel_ok'), onclick: function () { t.closeModal(); } })

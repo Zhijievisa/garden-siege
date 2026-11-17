@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   var GS = root.GS = {};
-  GS.VERSION = '1.2.0';
+  GS.VERSION = '1.3.0';
   GS.CFG_KEY = 'cfg';
   // The Power-Up's public API key (Power-Up admin → Authorization → Trello Auth). Replay is hidden while this is empty.
   GS.APP_KEY = '';
@@ -444,6 +444,7 @@
       else if (k === 'text') el.textContent = v;
       else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
       else if (k === 'value') el.value = v;
+      else if (k === 'style') el.style.cssText = v;   // CSSOM, so a strict style-src allows it
       else if (v === true) el.setAttribute(k, '');
       else el.setAttribute(k, v);
     });

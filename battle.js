@@ -483,7 +483,7 @@
       return h('div', { class: 'panel' }, [
         h('h2', { text: tr('au_title') }), h('p', { text: tr('au_body') }), msg,
         h('div', { class: 'foot' }, [
-          h('span', { class: 'muted small' }, [h('a', { class: 'link', href: './privacy.html', target: '_blank', rel: 'noopener', text: tr('privacy') })]),
+          h('span', { class: 'muted small' }, [h('a', { class: 'link', href: './privacy', target: '_blank', rel: 'noopener', text: tr('privacy') })]),
           h('span', { class: 'grow' }),
           h('button', { type: 'button', text: tr('cancel'), onclick: function () { authOpen = false; draw(); } }),
           // authorize() is called straight from the click so the browser allows Trello's consent window

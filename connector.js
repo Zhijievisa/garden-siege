@@ -12,7 +12,7 @@
   }
 
   function openMap(t) {
-    return t.modal({ url: './battle.html', title: tr('title_map'), fullscreen: true, accentColor: '#20302A' });
+    return t.modal({ url: './battle', title: tr('title_map'), fullscreen: true, accentColor: '#20302A' });
   }
 
   window.TrelloPowerUp.initialize({
@@ -25,13 +25,13 @@
     // Shown once, right after someone enables the Power-Up on a board.
     'on-enable': function (t) {
       return withCfg(t).then(function () {
-        return t.modal({ url: './welcome.html', title: tr('title_wel'), height: 440, fullscreen: false });
+        return t.modal({ url: './welcome', title: tr('title_wel'), height: 440, fullscreen: false });
       });
     },
 
     'show-settings': function (t) {
       return withCfg(t).then(function () {
-        return t.popup({ title: tr('title_set'), url: './settings.html', height: 560 });
+        return t.popup({ title: tr('title_set'), url: './settings', height: 560 });
       });
     },
 
@@ -42,7 +42,7 @@
 
     'show-authorization': function (t) {
       return withCfg(t).then(function () {
-        return t.popup({ title: tr('title_auth'), url: './authorize.html', height: 230 });
+        return t.popup({ title: tr('title_auth'), url: './authorize', height: 230 });
       });
     }
   }, GS.appOpts());

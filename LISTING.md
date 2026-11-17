@@ -1,36 +1,36 @@
 # Trello directory listing — copy to paste into the Power-Up admin portal
 
-Bracketed items are for you to fill in. Nothing here is submitted automatically. URLs assume the repository is
-`Zhijievisa/garden-siege` with GitHub Pages on; change them if you use another name.
+Bracketed items are for you to fill in. Nothing here is submitted automatically. The Power-Up is served from Cloudflare Pages (project `siege-line`, built from the repository
+`Zhijievisa/garden-siege`), because Trello's review checks the HTTP security headers and GitHub Pages cannot send them.
 
 ## Basic information
 
 | Field | Value |
 |---|---|
 | Name | Siege Line |
-| Iframe connector URL | `https://zhijievisa.github.io/garden-siege/index.html` |
+| Iframe connector URL | `https://siege-line.pages.dev/` |
 | Author | ZHIJIEVISA PTY LTD |
 | Email | info@zhijievisa.com |
-| Support contact | info@zhijievisa.com (help page: `https://zhijievisa.github.io/garden-siege/support.html`) |
+| Support contact | info@zhijievisa.com (help page: `https://siege-line.pages.dev/support`) |
 | Atlassian account email | [EMAIL OF YOUR ATLASSIAN ACCOUNT] |
 
 ## Capabilities to switch on
 
 Board buttons · On enable · Show settings · Authorization status · Show authorization
 
-Also: Authorization → Trello Auth → generate the API key, add `https://zhijievisa.github.io` to the allowed origins,
+Also: Authorization → Trello Auth → generate the API key, add `https://siege-line.pages.dev` to the allowed origins,
 and put the key in `GS.APP_KEY` in `shared.js`.
 
 ## Privacy and compliance
 
 | Field | Value |
 |---|---|
-| Privacy policy URL | `https://zhijievisa.github.io/garden-siege/privacy.html` |
+| Privacy policy URL | `https://siege-line.pages.dev/privacy` |
 | Stores personal data outside Trello? | No. Board data and history are read in the browser only; settings and the member's read-only token are stored in Trello Power-Up storage. |
 
 ## Listing
 
-**Icon (URL field, 144 × 144 px, HTTPS):** `https://zhijievisa.github.io/garden-siege/listing-icon-144.png`
+**Icon (URL field, 144 × 144 px, HTTPS):** `https://siege-line.pages.dev/listing-icon-144.png`
 (`listing-icon.png` is the same design at 512 × 512.)
 
 **Overview (one line):**
@@ -41,82 +41,87 @@ and put the key in `GS.APP_KEY` in `shared.js`.
 
 | Use | URL |
 |---|---|
-| The battle map with summary tiles and legend | `https://zhijievisa.github.io/garden-siege/img/battle-map.png` |
-| One member highlighted, with lines to their cards | `https://zhijievisa.github.io/garden-siege/img/highlight.png` |
-| Choosing a zone for each list | `https://zhijievisa.github.io/garden-siege/img/zones.png` |
-| Replay controls with the map part-way through a month | `https://zhijievisa.github.io/garden-siege/img/replay.png` |
+| Animation: hovering a unit, highlighting a member, highlighting a label | `https://siege-line.pages.dev/img/demo.gif` |
+| The battle map with summary tiles and legend | `https://siege-line.pages.dev/img/battle-map.png` |
+| One member highlighted, with lines to their cards | `https://siege-line.pages.dev/img/highlight.png` |
+| Choosing a zone for each list | `https://siege-line.pages.dev/img/zones.png` |
+| Animation: replay of a month (use only when replay is switched on) | `https://siege-line.pages.dev/img/replay.gif` |
+| Replay controls, still image (use only when replay is switched on) | `https://siege-line.pages.dev/img/replay.png` |
 
-**Description:** paste the text below into the editor, then insert each image where marked.
+**Description:** Markdown, paste as is. The section between the two `REPLAY` markers describes replay; include it
+only when replay is live (an API key is set in `GS.APP_KEY`), and delete the marker lines. A listing must not
+describe a feature the reviewer cannot find.
 
 ```
-Siege Line turns a Trello board into one picture you can read in five seconds. Every card is an enemy unit advancing on your headquarters. Every board member is a gun defending it. The nearer a unit is to headquarters, the sooner it needs you.
+Siege Line is for teams whose Trello board has grown past what anyone can take in at a glance: agencies, law and migration practices, support desks, studios, anyone with dozens or hundreds of open cards. It redraws the whole board as one battle map. Every card is an enemy unit advancing on your headquarters, every board member is a gun defending it, and the nearer a unit is to headquarters, the sooner it needs you.
 
-[IMAGE: battle-map.png]
+![Siege Line in action: hovering a unit, highlighting one member's cards, highlighting one label](https://siege-line.pages.dev/img/demo.gif)
 
-The problem it solves
+## The problem it solves
 
-A busy board is a wall of cards. You can scroll it, but you cannot see it. Which work is about to land on you? Where is someone waiting for your reply? Who is carrying the front line, and which cards belong to nobody? Siege Line answers those questions with position, colour and a little humour, so the team actually looks.
+A busy board is a wall of cards. You can scroll it, but you cannot see it. Which work is about to land on you? Where is someone waiting for your reply? Who is carrying the front line, and which cards belong to nobody? Siege Line answers those questions with position and colour, in a picture the team will actually look at.
 
-How it works
+## How it works
 
-1. Click "Battle map" on the board.
-2. Tell Siege Line which list is which zone. It guesses from your list names to start with.
+1. Click **Battle map** on the board.
+2. Tell Siege Line which list belongs to which zone. It guesses from your list names to start with.
 3. Read the map from headquarters outwards.
 
-The zones
+![The battle map: summary tiles, legend, zones from "At the walls" to "Inbound"](https://siege-line.pages.dev/img/battle-map.png)
 
-- At the walls: closest to headquarters. Do these first.
-- Shelling: someone is waiting on you and has opened fire.
-- Advancing and Midfield: queued work and work in progress.
-- Camped: on hold. In camp, not attacking.
-- Inbound: leads and ideas just parachuting in.
-- Truce: your part is done and you are waiting for an outcome.
-- Spoils: finished work with money still to collect.
-- Hidden: lists you leave off the map.
+## What you see
 
-What each unit tells you
+- **Zones.** At the walls (do these first), Shelling (someone is waiting on you), Advancing and Midfield (queued and in progress), Camped (on hold), Inbound (new leads and ideas), Truce (your part is done, awaiting an outcome), Spoils (finished work with money still to collect).
+- **Units.** Kind, colour and badge come from the card's first label, so each kind of work is its own kind of unit: tanks, jets, attack helicopters, infantry, armoured cars, bombers, drones, rocket trucks, jeeps.
+- **Who is on it.** Dots under a unit are the members assigned to the card. A red dashed ring means nobody is.
+- **Deadlines.** An orange flag means due soon. A red flag means overdue.
+- **Headline numbers.** Tiles count the units on the field, at the walls, shelling you, due soon, overdue and unguarded.
 
-- Its kind, colour and badge come from the card's first label, so each kind of work is its own kind of unit: tanks, jets, attack helicopters, infantry, armoured cars, bombers, drones, rocket trucks, jeeps.
-- Dots under it are the members assigned to the card.
-- A red dashed ring means nobody is assigned.
-- An orange flag means due soon. A red flag means overdue.
-- Hover for the card's details. Click to open the card.
+## See who is doing what
 
-[IMAGE: highlight.png]
-
-See who is doing what
+![One member highlighted, with tracer lines to every card they are assigned to](https://siege-line.pages.dev/img/highlight.png)
 
 - Click a gun to light up every card that member is assigned to.
 - Click a label in the legend to light up one kind of work.
 - The Firepower table counts each member's cards in every zone, and lists the cards nobody has picked up.
+- Hover over a unit for the card's details. Click it to open the card.
 
-Replay the last weeks
+<!-- REPLAY: start -->
+## Replay the last weeks
 
-[IMAGE: replay.png]
+![Replay: a month of the board played back day by day](https://siege-line.pages.dev/img/replay.gif)
 
-- Click Replay and watch the last 7, 30 or 90 days: units appear when cards were created, advance when cards moved, and leave when cards were archived.
+- Click **Replay** and watch the last 7, 30 or 90 days: units appear when cards were created, advance when cards moved, and leave when cards were archived.
 - Pause, drag the slider to any day, or speed it up. Each step says what arrived, moved and left.
 - Replay needs your permission to read the board's activity history. Access is read-only and you can disconnect at any time.
+<!-- REPLAY: end -->
 
-[IMAGE: zones.png]
+## Why use it
 
-Set up for your board
+- **Triage in five seconds.** What is at the walls and what is shelling you is the first thing you see.
+- **Nothing falls through.** Unassigned and overdue cards are marked on the map and counted at the top.
+- **Balance the load.** See at once which member is covering the front line and who has room.
+- **No new system.** It reads the lists, labels, members and due dates you already use. It never changes a card.
 
-- Choose the zone for each list in one screen.
+## Set up for your board
+
+![Choosing a zone for each list](https://siege-line.pages.dev/img/zones.png)
+
+- Choose the zone for each list on one screen.
 - Choose how many days ahead counts as "due soon".
-- English and Simplified Chinese.
+- English and Simplified Chinese. Light and dark themes.
 
-Your data stays in Trello
+## Your data stays in Trello
 
-Siege Line only reads the board in your browser to draw the picture. It does not change your cards. The only thing it saves is its own settings, on your board. Replay is optional and uses read-only access that you grant through Trello; the history is read in your browser and sent nowhere. There is no external server, no separate account to create, no analytics and no tracking.
+Siege Line reads the board in your browser to draw the picture. It does not change your cards. The only thing it saves is its own settings, on your board. There is no external server, no separate account to create, no analytics and no tracking.
 
-Good to know
+## Good to know
 
 - Everyone who can view the board sees the same map.
 - Designed for Trello in a desktop browser.
 - Free to use.
 
-Help and support: https://zhijievisa.github.io/garden-siege/support.html
+Help and support: https://siege-line.pages.dev/support
 ```
 
 **Suggested categories:** Board utilities; Analytics & reporting. Choose from whatever the form offers.
@@ -128,7 +133,7 @@ Help and support: https://zhijievisa.github.io/garden-siege/support.html
 - [ ] Name, listing text and images do not mention or imitate any existing game or brand. The artwork in this
       folder is original; keep it that way if you change it.
 - [ ] The five capabilities are on: Board buttons, On enable, Show settings, Authorization status, Show authorization.
-- [ ] The API key is generated, `https://zhijievisa.github.io` is an allowed origin, and `GS.APP_KEY` in `shared.js` is set.
+- [ ] The API key is generated, `https://siege-line.pages.dev` is an allowed origin, and `GS.APP_KEY` in `shared.js` is set.
 - [ ] Replay works in real Trello: Allow read access → Trello consent → the last 30 days play; Settings → Disconnect.
 - [ ] All fields in Basic information, Listings and Privacy and compliance are complete.
 - [ ] You have read the Atlassian developer terms, the Trello-specific terms and the public Power-Up guidelines.
@@ -143,13 +148,13 @@ Help and support: https://zhijievisa.github.io/garden-siege/support.html
 
 | Item | Value |
 |---|---|
-| Connector URL | `https://zhijievisa.github.io/garden-siege/index.html` |
+| Connector URL | `https://siege-line.pages.dev/` |
 | Power-Up ID | `6afbcaea648fae9c55657ec3` |
 | Preferred launch date | [DATE YOU WANT IT TO GO LIVE, or "as soon as approved"] |
 
 **What it does (paste):**
 
-> Siege Line draws the board as a battle map. Lists are mapped to zones from "At the gate" outwards; each card is
+> Siege Line draws the board as a battle map. Lists are mapped to zones from "At the walls" outwards; each card is
 > drawn as an enemy unit in its list's zone, its kind and colour set by its first label, with its assigned members
 > shown as dots and its due date as a flag. Members are drawn as guns; clicking one highlights their cards. A table counts each
 > member's cards per zone. Optional replay plays back the last 7/30/90 days from the board's action history.

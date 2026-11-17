@@ -3,7 +3,7 @@
 A Trello Power-Up that draws a board as a battle map. Every card is an enemy unit advancing on your headquarters;
 every board member is a gun defending it. The nearer a unit is to headquarters, the sooner it needs you.
 
-Version 1.2.0 · English and 简体中文
+Version 1.3.0 · English and 简体中文
 
 ## What it shows
 
@@ -47,7 +47,7 @@ card creation, list moves, archiving and deletion. Nothing is sent anywhere else
 
 ## Self-hosting
 
-1. Serve this folder over HTTPS (for example GitHub Pages).
+1. Serve this folder over HTTPS from a host that applies the `_headers` file (Cloudflare Pages, Netlify). GitHub Pages also works, but it cannot send the security response headers that Trello's review checks.
 2. In https://trello.com/power-ups/admin create a Power-Up whose Iframe connector URL is `…/index.html`.
 3. Enable the capabilities: **Board buttons**, **On enable**, **Show settings**, **Authorization status**,
    **Show authorization**.
@@ -75,6 +75,11 @@ and style URLs in every `.html` file together, so users get one consistent set o
 - Artwork is original to this project.
 
 ## Changelog
+
+**1.3.0** Security hardening for Trello's public review: no inline scripts (pages start from `boot.js`), a strict
+Content-Security-Policy on every page (`<meta>` tag) and as a response header (`_headers`), plus HSTS,
+`X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Policy`. Hosting moved to Cloudflare Pages, which
+applies `_headers`; GitHub Pages cannot send custom response headers. Listing animation added.
 
 **1.2.0** Military artwork: enemy units chosen by label, guns for members. Label variants that share a number or a
 first word are one unit type. Renamed Siege Line.

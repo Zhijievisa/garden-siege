@@ -64,8 +64,8 @@
         note,
         h('div', { class: 'foot' }, [
           h('span', { class: 'muted small' }, [
-            h('a', { class: 'link', href: './support.html', target: '_blank', rel: 'noopener', text: tr('support') }), ' · ',
-            h('a', { class: 'link', href: './privacy.html', target: '_blank', rel: 'noopener', text: tr('privacy') })
+            h('a', { class: 'link', href: './support', target: '_blank', rel: 'noopener', text: tr('support') }), ' · ',
+            h('a', { class: 'link', href: './privacy', target: '_blank', rel: 'noopener', text: tr('privacy') })
           ]),
           h('span', { class: 'grow' }),
           canEdit ? h('button', { type: 'button', text: tr('set_suggest'), onclick: suggest }) : null,
