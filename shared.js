@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   var GS = root.GS = {};
-  GS.VERSION = '1.3.2';
+  GS.VERSION = '1.3.3';
   GS.CFG_KEY = 'cfg';
   // The Power-Up's public API key (Power-Up admin → Authorization → Trello Auth). Replay is hidden while this is empty.
   GS.APP_KEY = '8bd2d0ae948399044c39bb325ead5baf';   // public client-side key of this Power-Up (not the secret)
@@ -98,15 +98,18 @@
   add('rp_kill_actor', '{0} destroyed {1} (nobody assigned; credited to whoever moved it)', '{0} 消灭了 {1}（无人负责，记给移动卡片的人）');
   add('rp_kill_unknown', 'Destroyed, gunner unknown: {0}', '被消灭（不知道是谁）：{0}');
   add('rp_more', '…and {0} more', '…另有 {0} 条');
-  add('rp_score', 'Destroyed so far', '累计战果');
-  add('rp_score_none', 'nothing destroyed yet', '还没有消灭敌人');
-  add('rp_score_tip', '{0} destroyed, {1} of them jointly', '消灭 {0} 个，其中 {1} 个是合力');
-  add('tb_kills', 'Destroyed', '战果');
+  add('rp_score', 'Medals so far', '奖章榜');
+  add('rp_top', 'Top gun', '头号大炮');
+  add('medals_n', '{0} medals', '{0} 枚奖章');
+  add('medals_n_1', '{0} medal', '{0} 枚奖章');
+  add('rp_score_none', 'no medals yet', '还没有人获得奖章');
+  add('rp_score_tip', '{0} medals, one for each unit destroyed; {1} of them shared', '{0} 枚奖章，每消灭一个敌人得一枚；其中 {1} 枚是合力');
+  add('tb_kills', 'Medals', '奖章');
   add('tip_killed', 'Destroyed by', '消灭者');
   add('rp_quiet', 'Nothing moved', '没有变化');
   add('rp_gone', 'off the map', '离场');
   add('rp_new', 'new', '新出现');
-  add('rp_note', 'A unit is destroyed when its card leaves the field: to Truce, Spoils, a hidden list or the archive. Credit goes to the members assigned to the card; if nobody is assigned, to whoever moved it. Labels and members are shown as they are today.', '卡片离开战场（进入停火、战利品、隐藏的列，或被归档）即算被消灭。战果记给卡片上的负责成员；无人负责时，记给移动卡片的人。标签和成员按今天的状态显示。');
+  add('rp_note', 'A unit is destroyed when its card leaves the field: to Truce, Spoils, a hidden list or the archive. Each unit destroyed earns one medal for every member assigned to the card; if nobody is assigned, the medal goes to whoever moved it. The gun with the most medals wears the crown. Labels and members are shown as they are today.', '卡片离开战场（进入停火、战利品、隐藏的列，或被归档）即算被消灭。每消灭一个敌人，卡片上的每位负责成员各得一枚奖章；无人负责时，奖章给移动卡片的人。奖章最多的大炮戴皇冠。标签和成员按今天的状态显示。');
   add('rp_err', 'Could not read the board history. Try again, or reconnect in Settings.', '读取看板历史失败。请重试，或在设置里重新授权。');
   add('au_title', 'Allow Siege Line to read this board\'s history', '允许防线保卫战读取本看板的历史');
   add('au_body', 'Replay rebuilds past positions from Trello\'s activity history (cards created, moved and archived). Trello will ask you to allow read-only access for your account. Siege Line reads only this board\'s history, in your browser, and sends it nowhere.', '回放要用 Trello 的活动记录（卡片新建、移动、归档）来还原过去的位置。Trello 会请你为自己的账号授予只读权限。防线保卫战只在你的浏览器里读取本看板的历史，不会发送到任何地方。');

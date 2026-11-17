@@ -111,6 +111,8 @@ input:disabled, select:disabled { opacity: .7; }
 .rp-score { display: flex; gap: 6px 8px; flex-wrap: wrap; align-items: center; font-size: 12.5px; min-height: 24px; }
 .score { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 7px; border-radius: 14px; background: var(--btn); }
 .score b { font-variant-numeric: tabular-nums; }
+.score.top { background: #F5C542; color: #3B2A05; font-weight: 600; }
+.rp-score .ico, .score .ico { display: inline-flex; flex: none; }
 .rp-kill { display: flex; align-items: center; gap: 4px; font-weight: 600; }
 .score .dot { margin-right: 0; }
 .rp-kill .dot { flex: none; margin-right: 1px; }

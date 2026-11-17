@@ -122,16 +122,27 @@
     // rocket battery
     '<path d="M40 68l48-30 11 17-48 30z" fill="' + OLIVE + '"' + OUT + '/><path d="M52 61l10 16M64 53l10 16M76 46l10 16" stroke="' + INK + '" stroke-width="1.2"/><path d="M88 38l11 17" stroke="' + INK + '" stroke-width="4" stroke-linecap="round"/><rect x="50" y="76" width="24" height="9" fill="' + STEEL2 + '"' + OUT + '/>' + wheels([[48, 86], [76, 86]], 6.5, '#8A9A72')
   ];
-  function gun(m, x, y) {
+  // A medal: two ribbon tails and a gold disc. Drawn at 0,0; about 26 wide and 34 tall.
+  var MEDAL = '<path d="M-9-17h7l3 9h-7z" fill="#C8453B"' + OUT + '/><path d="M9-17h-7l-3 9h7z" fill="#2F5DA8"' + OUT + '/><circle r="12" cy="3" fill="#F5C542" stroke="#8A6A12" stroke-width="2"/><circle r="8.2" cy="3" fill="none" stroke="#FFF3C4" stroke-width="1.4"/>';
+  var CROWN = '<path d="M-15 8V-6l8 7 7-11 7 11 8-7V8z" fill="#F5C542" stroke="#8A6A12" stroke-width="2" stroke-linejoin="round"/><circle cx="-15" cy="-7" r="2.4" fill="#C8453B"/><circle cy="-11" r="2.4" fill="#C8453B"/><circle cx="15" cy="-7" r="2.4" fill="#C8453B"/>';
+  GS.medalIcon = function () { return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -19 28 36" width="14" height="18" aria-hidden="true">' + MEDAL + '</svg>'; };
+  GS.crownIcon = function () { return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-19 -15 38 26" width="19" height="13" aria-hidden="true">' + CROWN + '</svg>'; };
+
+  function gun(m, x, y, medals, top) {
     var label = m.short + ' · ' + tr('front', m.front);
-    return '<g class="p" data-m="' + esc(m.id) + '" tabindex="0" role="button" aria-label="' + esc(m.name + ', ' + tr('front', m.front)) + '" transform="translate(' + x + ' ' + y + ')">' +
+    var extra = '';
+    if (medals) {
+      extra += '<g class="medal" transform="translate(102 84) scale(1.3)">' + MEDAL + '<text y="7.5" font-size="' + (medals > 99 ? 9.5 : 12) + '" font-weight="700" text-anchor="middle" fill="#3B2A05">' + (medals > 999 ? '999+' : medals) + '</text></g>';
+      if (top) extra += '<g class="crown" transform="translate(62 6)">' + CROWN + '</g>';
+    }
+    return '<g class="p' + (top && medals ? ' top' : '') + '" data-m="' + esc(m.id) + '" tabindex="0" role="button" aria-label="' + esc(m.name + ', ' + tr('front', m.front) + (medals ? ', ' + tr('medals_n', medals) : '')) + '" transform="translate(' + x + ' ' + y + ')">' +
       '<rect x="0" y="-4" width="124" height="146" fill="#FFFFFF" fill-opacity="0"/>' +
       // the crew's pennant carries the member's colour
       '<path d="M26 96V26" stroke="' + INK + '" stroke-width="2" stroke-linecap="round"/><path d="M26 27h20l-6 7 6 7H26z" fill="' + m.color + '"' + OUT + '/>' +
       ART[m.design] + BAGS +
       '<circle cx="106" cy="34" r="5" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.3"/><circle cx="117" cy="28" r="3.8" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.3"/>' +
       '<rect class="tag" x="2" y="114" width="118" height="23" rx="11.5" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.5"/>' +
-      '<text x="61" y="130.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#FFFFFF">' + esc(cut(label, 17)) + '</text></g>';
+      '<text x="61" y="130.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#FFFFFF">' + esc(cut(label, 17)) + '</text>' + extra + '</g>';
   }
 
   /* ---------- the scene ---------- */
@@ -230,7 +241,7 @@
       var col = Math.floor(i / perCol), row = i % perCol;
       var px = 206 + col * 130, py = 152 + row * spacing;
       plantPos[m.id] = { x: px + 110, y: py + 32 };
-      S.push(gun(m, px, py));
+      S.push(gun(m, px, py, opts.medals ? opts.medals[m.id] || 0 : 0, !!(opts.top && opts.top[m.id])));
     });
 
     // below the field: cards awaiting an outcome, and money to collect
@@ -370,7 +381,14 @@
       var old = {};
       if (animate && sc) sc.cards.forEach(function (it) { old[it.card.id] = it; });
       lastOld = old;
-      sc = scene(view, rp ? { caps: rp.caps, plantIds: rp.plantIds } : null);
+      var medals = null, top = null;
+      if (rp && rp.kills) {
+        var sAt = scoreAt(rp.k), best = 0, mid;
+        medals = {}; top = {};
+        for (mid in sAt) { medals[mid] = sAt[mid].n; if (sAt[mid].n > best) best = sAt[mid].n; }
+        for (mid in sAt) if (best && sAt[mid].n === best) top[mid] = true;
+      }
+      sc = scene(view, rp ? { caps: rp.caps, plantIds: rp.plantIds, medals: medals, top: top } : null);
       svg.setAttribute('viewBox', '0 0 ' + sc.W + ' ' + sc.H);
       svg.innerHTML = sc.html;
       if (animate && !STILL && svg.animate) {
@@ -485,9 +503,13 @@
       if (!rpUi) return;
       var s = scoreAt(rp.k), rows = Object.keys(s).map(function (id) { return s[id]; });
       rows.sort(function (a, b) { return b.n - a.n || (shortName(a.id) < shortName(b.id) ? -1 : 1); });
-      GS.fill(rpUi.score, [h('span', { class: 'legend-title', text: tr('rp_score') })].concat(rows.length
+      var best = rows.length ? rows[0].n : 0;
+      var ico = function (html) { var el = h('span', { class: 'ico' }); el.innerHTML = html; return el; };
+      GS.fill(rpUi.score, [ico(GS.medalIcon()), h('span', { class: 'legend-title', text: tr('rp_score') })].concat(rows.length
         ? rows.map(function (r) {
-          return h('span', { class: 'score', title: tr('rp_score_tip', r.n, r.joint) }, [h('i', { class: 'dot', style: 'background:' + colorOf(r.id) }), h('span', { text: shortName(r.id) }), h('b', { text: String(r.n) })]);
+          var lead = r.n === best;
+          return h('span', { class: 'score' + (lead ? ' top' : ''), title: (lead ? tr('rp_top') + ' · ' : '') + tr('rp_score_tip', r.n, r.joint) },
+            [lead ? ico(GS.crownIcon()) : null, h('i', { class: 'dot', style: 'background:' + colorOf(r.id) }), h('span', { text: shortName(r.id) }), h('b', { text: String(r.n) })]);
         })
         : [h('span', { class: 'muted', text: tr('rp_score_none') })]));
     }
