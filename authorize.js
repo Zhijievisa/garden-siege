@@ -1,4 +1,4 @@
-/* Garden Siege — history access popup (opened by the show-authorization capability) */
+/* Siege Line — history access popup (opened by the show-authorization capability) */
 (function () {
   'use strict';
   var GS = window.GS, h = GS.h, tr = GS.tr;

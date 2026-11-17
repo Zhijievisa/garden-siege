@@ -3,39 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Garden Siege — Help &amp; Support</title>
+  <title>Siege Line — Help &amp; Support</title>
   <link rel="stylesheet" href="./ui.css">
 </head>
 <body>
 <div class="doc">
-  <h1>Garden Siege — Help &amp; Support</h1>
-  <p class="muted">Your board as a battle map: cards are zombies, members are plants.</p>
+  <h1>Siege Line — Help &amp; Support</h1>
+  <p class="muted">Your board as a battle map: cards are enemy units, members are the guns defending headquarters.</p>
 
   <h2>Getting started</h2>
   <ol>
     <li>Click <strong>Battle map</strong> at the top of the board. It may sit inside the board's Power-Ups menu.</li>
     <li>Click <strong>Set up zones</strong> and choose a zone for each list, then <strong>Save</strong>. Until you do,
     zones are guessed from the list names.</li>
-    <li>Read the map from left to right: the nearer a zombie is to the house, the sooner it needs you.</li>
+    <li>Read the map from left to right: the nearer a unit is to headquarters, the sooner it needs you.</li>
   </ol>
 
   <h2>The zones</h2>
   <ul>
-    <li><strong>At the gate</strong>: closest to the house. Work on these first.</li>
-    <li><strong>Throwers</strong>: someone is waiting on you, for example a client or an authority that has asked for something.</li>
+    <li><strong>At the walls</strong>: closest to headquarters. Work on these first.</li>
+    <li><strong>Shelling</strong>: someone is waiting on you and has opened fire, for example a client or an authority that has asked for something.</li>
     <li><strong>Advancing</strong> and <strong>Midfield</strong>: queued work and work in progress.</li>
-    <li><strong>Dozing</strong>: on hold. These zombies are asleep and not attacking.</li>
-    <li><strong>Emerging</strong>: leads and ideas that are just breaking the soil.</li>
-    <li><strong>Bubbled</strong>: your part is done and you are waiting for an outcome. Shown below the field.</li>
-    <li><strong>Coins</strong>: finished work with money still to collect. Shown below the field as coins.</li>
+    <li><strong>Camped</strong>: on hold. These units have made camp and are not attacking.</li>
+    <li><strong>Inbound</strong>: leads and ideas that are just parachuting in.</li>
+    <li><strong>Truce</strong>: your part is done and you are waiting for an outcome. These units fly a white flag, below the field.</li>
+    <li><strong>Spoils</strong>: finished work with money still to collect. Shown below the field as coins.</li>
     <li><strong>Hidden</strong>: lists you do not want on the map, such as finished work.</li>
   </ul>
 
-  <h2>Reading a zombie</h2>
+  <h2>Reading a unit</h2>
   <ul>
-    <li><strong>Colour and badge</strong> come from the card's first label. The nine most common labels get their own
-    colour; the rest are grey. The badge is the number in the label's name if there is one, otherwise its initials.</li>
-    <li><strong>Dots under the feet</strong> are the members assigned to the card: the plants firing at it.</li>
+    <li><strong>Kind, colour and badge</strong> come from the card's first label. The nine most common labels each get
+    their own kind of unit and colour: tank, jet, attack helicopter, infantry, armoured car, bomber, drone, rocket
+    truck and jeep, in order of how common the label is. Other labels are grey supply trucks, and cards with no label
+    are grey infantry. The badge is the number in the label's name if there is one, otherwise its initials.</li>
+    <li><strong>Dots under the badge</strong> are the members assigned to the card: the guns firing at it. Each gun flies a pennant in its member's colour.</li>
     <li><strong>A red dashed ring</strong> means nobody is assigned.</li>
     <li><strong>An orange flag</strong> means the card is due within the number of days you set (7 by default).
     <strong>A red flag</strong> means it is overdue. Cards whose due date is ticked complete show no flag.</li>
@@ -43,17 +45,17 @@
 
   <h2>Things you can do</h2>
   <ul>
-    <li>Hover over a zombie or coin to see the card's name, list, labels, members and due date.</li>
-    <li>Click a zombie or coin to open the card.</li>
-    <li>Click a plant to highlight everything that member is assigned to. Click it again to clear.</li>
+    <li>Hover over a unit or coin to see the card's name, list, labels, members and due date.</li>
+    <li>Click a unit or coin to open the card.</li>
+    <li>Click a gun to highlight everything that member is assigned to, with tracer lines. Click it again to clear.</li>
     <li>Click a type in the legend to highlight that label.</li>
     <li>The <strong>Firepower</strong> table under the map counts each member's cards by zone.</li>
   </ul>
 
   <h2>Replay</h2>
   <ul>
-    <li>Click <strong>Replay</strong> to watch the board's recent past play back: zombies appear when cards were
-    created, walk between zones when cards were moved to another list, and leave when cards were archived.</li>
+    <li>Click <strong>Replay</strong> to watch the board's recent past play back: units appear when cards were
+    created, move between zones when cards were moved to another list, and leave when cards were archived.</li>
     <li>The first time, click <strong>Allow read access</strong> and approve Trello's consent screen. Replay needs
     read-only access to the board's activity history. Each person who wants replay does this once for themselves.</li>
     <li>Choose 7, 30 or 90 days. Use <strong>Play</strong>/<strong>Pause</strong>, the slider and the speed control.
@@ -64,7 +66,7 @@
   </ul>
 
   <h2>Settings</h2>
-  <p>Board menu → Power-Ups → Garden Siege → Settings, or <strong>Set up zones</strong> inside the map: language
+  <p>Board menu → Power-Ups → Siege Line → Settings, or <strong>Set up zones</strong> inside the map: language
   (English or 简体中文), the "due soon" window in days, and the zone for each list. Only people who can edit the board
   can change settings. If you have allowed read access for replay, Settings also shows a <strong>Disconnect</strong>
   button for your own account.</p>
@@ -82,8 +84,8 @@
   <p><strong>A card jumps or appears late in replay.</strong> Replay follows card creation, moves between lists,
   archiving and deletion. Cards on lists that were later archived, and whole lists moved between boards, are not
   followed.</p>
-  <p><strong>My zombies are mostly grey.</strong> Colour follows each card's first label, and only the nine most common
-  first labels get a colour. Put the label you care about first on the card, or use fewer distinct labels.</p>
+  <p><strong>Most of my units are grey trucks.</strong> Kind and colour follow each card's first label, and only the nine most common
+  first labels get their own. Put the label you care about first on the card, or use fewer distinct labels.</p>
   <p><strong>Does it work in the mobile apps?</strong> It is designed for Trello in a desktop browser.</p>
 
   <h2>Contact</h2>

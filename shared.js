@@ -1,4 +1,4 @@
-/* Garden Siege — shared logic: interface strings, settings, zones, the board model, DOM helpers, demo data.
+/* Siege Line — shared logic: interface strings, settings, zones, the board model, DOM helpers, demo data.
  * Where data lives:
  *   board  t.set('board', 'shared', 'cfg', {...})   language, "due soon" window, list → zone mapping
  * Nothing is stored on cards and nothing leaves the browser.
@@ -10,66 +10,66 @@
   GS.CFG_KEY = 'cfg';
   // The Power-Up's public API key (Power-Up admin → Authorization → Trello Auth). Replay is hidden while this is empty.
   GS.APP_KEY = '';
-  GS.APP_NAME = 'Garden Siege';
+  GS.APP_NAME = 'Siege Line';
   GS.appOpts = function () { return GS.APP_KEY ? { appKey: GS.APP_KEY, appName: GS.APP_NAME } : undefined; };
 
   /* ---------- interface strings (English + 简体中文) ---------- */
   var STR = { en: {}, zh: {} };
   function add(key, en, zh) { STR.en[key] = en; STR.zh[key] = zh; }
 
-  add('name', 'Garden Siege', '花园保卫战');
+  add('name', 'Siege Line', '防线保卫战');
   add('btn_map', 'Battle map', '战况图');
-  add('title_map', 'Garden Siege — battle map', '花园保卫战 · 战况图');
-  add('title_set', 'Garden Siege settings', '花园保卫战 · 设置');
-  add('title_wel', 'Welcome to Garden Siege', '欢迎使用花园保卫战');
+  add('title_map', 'Siege Line — battle map', '防线保卫战 · 战况图');
+  add('title_set', 'Siege Line settings', '防线保卫战 · 设置');
+  add('title_wel', 'Welcome to Siege Line', '欢迎使用防线保卫战');
 
-  add('z_g', 'At the gate', '门口');
-  add('z_t', 'Throwers', '投掷手');
+  add('z_g', 'At the walls', '兵临城下');
+  add('z_t', 'Shelling', '炮击中');
   add('z_a', 'Advancing', '逼近中');
   add('z_m', 'Midfield', '中场');
-  add('z_d', 'Dozing', '打盹');
-  add('z_e', 'Emerging', '刚冒头');
-  add('z_b', 'Bubbled', '等结果');
-  add('z_c', 'Coins', '金币');
+  add('z_d', 'Camped', '扎营');
+  add('z_e', 'Inbound', '刚空降');
+  add('z_b', 'Truce', '停火等结果');
+  add('z_c', 'Spoils', '战利品');
   add('z_x', 'Hidden', '不显示');
-  add('zd_g', 'Closest to the house: work on these first', '离家最近：最先处理');
-  add('zd_t', 'Someone is waiting on you and throwing things', '对方在等你回应，正在扔东西');
+  add('zd_g', 'Closest to headquarters: work on these first', '离指挥部最近：最先处理');
+  add('zd_t', 'Someone is waiting on you and has opened fire', '对方在等你回应，已经开火');
   add('zd_a', 'Queued and getting closer', '已排队，正在靠近');
   add('zd_m', 'In progress, some way off', '进行中，还有一段距离');
-  add('zd_d', 'On hold: not attacking for now', '搁置中：暂时不进攻');
-  add('zd_e', 'Leads and ideas just breaking the soil', '线索和想法，刚从土里冒头');
-  add('zd_b', 'Your part is done: waiting for an outcome', '你这边已做完：等结果');
+  add('zd_d', 'On hold: camped, not attacking for now', '搁置中：原地扎营，暂时不进攻');
+  add('zd_e', 'Leads and ideas just parachuting in', '线索和想法，刚刚空降');
+  add('zd_b', 'Your part is done: white flag up, waiting for an outcome', '你这边已做完：举白旗，等结果');
   add('zd_c', 'Finished work with money still to collect', '已完成，还有钱要收');
   add('zd_x', 'Left off the map', '不画在图上');
 
-  add('st_field', 'On the field', '场上僵尸');
-  add('st_gate', 'At the gate', '已到门口');
-  add('st_throw', 'Throwing', '正在投掷');
+  add('st_field', 'Enemy units on the field', '场上敌军');
+  add('st_gate', 'At the walls', '兵临城下');
+  add('st_throw', 'Shelling us', '正在炮击');
   add('st_soon', 'Front lines due in {0} days', '前两线 {0} 天内到期');
   add('st_soon_1', 'Front lines due in 1 day', '前两线 1 天内到期');
   add('st_over', 'Overdue on the field', '场上已逾期');
   add('st_bub', 'Awaiting outcome', '等结果');
-  add('st_coin', 'To collect', '待收金币');
+  add('st_coin', 'Spoils to collect', '待收战利品');
   add('st_ung', 'Unguarded', '无人防守');
 
-  add('lg_types', 'Zombie types (first label)', '僵尸种类（按第一个标签）');
+  add('lg_types', 'Unit types (first label)', '兵种（按第一个标签）');
   add('lg_other', 'Other labels', '其他标签');
   add('lg_none', 'No label', '无标签');
   add('lg_soon', 'Due soon', '即将到期');
   add('lg_over', 'Overdue', '已逾期');
-  add('lg_pips', 'Dots under a zombie = plants firing at it', '脚下圆点 = 正在开火的植物');
+  add('lg_pips', 'Dots under a unit = guns firing at it', '下方圆点 = 正在开火的火炮');
   add('lg_ung', 'Dashed ring = nobody assigned', '虚线圈 = 无人负责');
-  add('lg_click', 'Click a zombie to open its card. Click a plant or a type to highlight.', '点僵尸打开卡片；点植物或种类可高亮。');
+  add('lg_click', 'Click a unit to open its card. Click a gun or a type to highlight.', '点敌军打开卡片；点火炮或兵种可高亮。');
 
   add('tb_title', 'Firepower', '火力分配');
   add('tb_sub', 'Cards per member in each zone. A card can have several members.', '每位成员在各区域名下的卡片数；一张卡可有多位成员。');
-  add('tb_plant', 'Plant', '植物');
+  add('tb_gun', 'Gun', '火炮');
   add('tb_total', 'Total', '合计');
   add('front', 'front {0}', '前线 {0}');
 
   add('tip_list', 'List', '所在列');
   add('tip_labels', 'Labels', '标签');
-  add('tip_plants', 'Plants', '植物');
+  add('tip_plants', 'Guns', '火炮');
   add('tip_due', 'Due', '到期');
   add('tip_none', 'nobody', '无人');
   add('refresh', 'Refresh', '刷新');
@@ -98,8 +98,8 @@
   add('rp_new', 'new', '新出现');
   add('rp_note', 'Replay shows where each card was. Labels, members and due dates are shown as they are today; cards that no longer exist are grey.', '回放还原的是每张卡当时所在的列。标签、成员按今天的状态显示；已不存在的卡片显示为灰色。');
   add('rp_err', 'Could not read the board history. Try again, or reconnect in Settings.', '读取看板历史失败。请重试，或在设置里重新授权。');
-  add('au_title', 'Allow Garden Siege to read this board\'s history', '允许花园保卫战读取本看板的历史');
-  add('au_body', 'Replay rebuilds past positions from Trello\'s activity history (cards created, moved and archived). Trello will ask you to allow read-only access for your account. Garden Siege reads only this board\'s history, in your browser, and sends it nowhere.', '回放要用 Trello 的活动记录（卡片新建、移动、归档）来还原过去的位置。Trello 会请你为自己的账号授予只读权限。花园保卫战只在你的浏览器里读取本看板的历史，不会发送到任何地方。');
+  add('au_title', 'Allow Siege Line to read this board\'s history', '允许防线保卫战读取本看板的历史');
+  add('au_body', 'Replay rebuilds past positions from Trello\'s activity history (cards created, moved and archived). Trello will ask you to allow read-only access for your account. Siege Line reads only this board\'s history, in your browser, and sends it nowhere.', '回放要用 Trello 的活动记录（卡片新建、移动、归档）来还原过去的位置。Trello 会请你为自己的账号授予只读权限。防线保卫战只在你的浏览器里读取本看板的历史，不会发送到任何地方。');
   add('au_ok', 'Allow read access', '授予只读权限');
   add('au_denied', 'Access was not granted. Replay stays off; the battle map works without it.', '没有获得授权。回放不可用，战况图本身不受影响。');
   add('au_done', 'Connected. You can close this window.', '已授权，可以关闭这个窗口。');
@@ -107,7 +107,7 @@
   add('au_on', 'Connected for your account', '你的账号已授权');
   add('au_off', 'Not connected', '未授权');
   add('au_disconnect', 'Disconnect', '取消授权');
-  add('title_auth', 'Garden Siege — history access', '花园保卫战 · 历史读取授权');
+  add('title_auth', 'Siege Line — history access', '防线保卫战 · 历史读取授权');
 
   add('set_lang', 'Language', '语言');
   add('set_auto', 'Automatic', '自动');
@@ -123,12 +123,12 @@
   add('privacy', 'Privacy', '隐私政策');
   add('support', 'Help & support', '帮助与支持');
 
-  add('wel_intro', 'Garden Siege turns this board into a battle map. Every card is a zombie walking towards your house, and every board member is a plant defending it.', '花园保卫战把这块看板画成一张战况图：每张卡片是一只走向你家的僵尸，每位看板成员是一株守家的植物。');
+  add('wel_intro', 'Siege Line turns this board into a battle map. Every card is an enemy unit advancing on your headquarters, and every board member is a gun defending it.', '防线保卫战把这块看板画成一张战况图：每张卡片是一支向指挥部推进的敌军，每位看板成员是一门守卫的火炮。');
   add('wel_1', 'Click "Battle map" at the top of the board (it may sit inside the board\'s Power-Ups menu).', '点看板顶部的"战况图"（也可能收在看板的 Power-Ups 菜单里）。');
   add('wel_2', 'Open "Set up zones" and say which list is at the gate, which is on hold, and so on. Until you do, zones are guessed from list names.', '打开"设置区域"，指定哪一列在门口、哪一列搁置等。没设置之前按列名猜测。');
-  add('wel_3', 'A zombie\'s colour and badge come from the card\'s first label. The dots under it are the members assigned to the card.', '僵尸的颜色和胸牌来自卡片的第一个标签；脚下的圆点是卡片上的成员。');
+  add('wel_3', 'A unit\'s kind, colour and badge come from the card\'s first label: tanks, jets, helicopters, infantry and more. The dots under it are the members assigned to the card.', '敌军的兵种、颜色和番号牌来自卡片的第一个标签：坦克、战机、直升机、步兵等。下方的圆点是卡片上的成员。');
   add('wel_4', 'Click "Replay" to watch the last weeks play back. The first time, Trello asks you to allow read-only access to the board\'s history.', '点"回放"可以把过去几周重新播放一遍。第一次使用时 Trello 会请你授予看板历史的只读权限。');
-  add('wel_data', 'Garden Siege only reads this board in your browser. It saves your zone choices on the board and nothing else. No account, no server, no tracking.', '花园保卫战只在你的浏览器里读取本看板，除了区域设置外不保存任何内容。无需账号，没有服务器，不做追踪。');
+  add('wel_data', 'Siege Line only reads this board in your browser. It saves your zone choices on the board and nothing else. No account, no server, no tracking.', '防线保卫战只在你的浏览器里读取本看板，除了区域设置外不保存任何内容。无需账号，没有服务器，不做追踪。');
   add('wel_ok', 'Got it', '知道了');
 
   GS.lang = 'en';
@@ -189,6 +189,8 @@
   /* ---------- colours ---------- */
   GS.INK = '#26232B';
   GS.TYPE_COLORS = ['#E8892B', '#1F9E9A', '#EE8FAE', '#8E6BBF', '#EFC93D', '#4A86D9', '#A9744F', '#C8453B', '#7DB548'];
+  // The most common first labels each become their own kind of unit, in this order; other labels are supply trucks.
+  GS.KINDS = ['tank', 'jet', 'heli', 'infantry', 'apc', 'bomber', 'drone', 'rocket', 'jeep'];
   GS.OTHER_COLOR = '#A7A39A';
   GS.NONE_COLOR = '#D5D2C9';
   GS.PLANT_COLORS = ['#1F3A5F', '#C2185B', '#1B8A5A', '#7E57C2', '#F28C28', '#0E7490', '#8D4E24', '#B5179E', '#4F6D00', '#5B5B66'];
@@ -229,7 +231,7 @@
     var typeMap = {}, memberMap = {}, zones = {}, all = [];
     GS.ZONES.forEach(function (z) { zones[z] = []; });
     if (fixed) {
-      fixed.types.forEach(function (t) { typeMap[t.key] = { key: t.key, name: t.name, tcolor: t.tcolor, badge: t.badge, count: 0, rank: t.rank, top: t.top, color: t.color }; });
+      fixed.types.forEach(function (t) { typeMap[t.key] = { key: t.key, name: t.name, tcolor: t.tcolor, badge: t.badge, count: 0, rank: t.rank, top: t.top, color: t.color, kind: t.kind }; });
       fixed.members.forEach(function (m) { memberMap[m.id] = { id: m.id, name: m.name, counts: {}, total: 0, front: 0, color: m.color, design: m.design, short: m.short }; });
     }
     (cards || []).forEach(function (c) {
@@ -259,7 +261,7 @@
     var types = Object.keys(typeMap).map(function (k) { return typeMap[k]; });
     if (fixed) {
       types.sort(function (a, b) { return (a.rank === undefined ? 1e6 : a.rank) - (b.rank === undefined ? 1e6 : b.rank); });
-      types.forEach(function (t, i) { if (t.rank === undefined) { t.rank = 1e5 + i; t.top = false; t.color = GS.OTHER_COLOR; } });
+      types.forEach(function (t, i) { if (t.rank === undefined) { t.rank = 1e5 + i; t.top = false; t.color = GS.OTHER_COLOR; t.kind = 'truck'; } });
     } else {
       types.sort(function (a, b) { return b.count - a.count || (a.name < b.name ? -1 : 1); });
       var top = types.slice(0, GS.TYPE_COLORS.length), seen = {}, distinct = true;
@@ -268,6 +270,7 @@
         t.rank = i;
         t.top = i < GS.TYPE_COLORS.length;
         t.color = t.top ? (distinct ? t.tcolor : GS.TYPE_COLORS[i]) : GS.OTHER_COLOR;
+        t.kind = t.top ? GS.KINDS[i % GS.KINDS.length] : 'truck';
       });
     }
     var typeOf = {}; types.forEach(function (t) { typeOf[t.key] = t; });

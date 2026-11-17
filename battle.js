@@ -1,15 +1,16 @@
-/* Garden Siege — the battle map (opened in a modal by the board button).
- * Cards are zombies, placed by the zone their list belongs to; members are plants; labels decide the zombie type.
+/* Siege Line — the battle map (opened in a modal by the board button).
+ * Cards are enemy units, placed by the zone their list belongs to; members are the defending guns; a card's
+ * first label decides what kind of unit it is.
  * Everything is drawn in the browser from t.lists() and t.cards(); nothing is written except the settings.
  */
 (function () {
   'use strict';
   var GS = window.GS, h = GS.h, tr = GS.tr, esc = GS.esc, INK = GS.INK;
 
-  var CW = 66, CH = 72, TOP = 166;          // zombie cell at scale 1, and where the first row starts
-  var DW = 50, DH = 57;                     // dozing zombies are drawn at 0.8
-  var EH = 96;                              // emerging zombies need room for their mound
-  var MINW = { g: 196, t: 196, a: 196, m: 196, d: 196, e: 180 };
+  var CW = 66, CH = 72, TOP = 166;          // unit cell at scale 1, and where the first row starts
+  var DW = 50, DH = 57;                     // camped units are drawn at 0.8
+  var EH = 96;                              // units dropping in need room for their parachute
+  var MINW = { g: 210, t: 200, a: 200, m: 200, d: 200, e: 190 };
   var GROUND = { g: '#C9E0AB', t: '#B6D296', a: '#C9E0AB', m: '#B6D296', d: '#A9C9C0', e: '#9A8468' };
 
   function jit(i, k) { var v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return Math.round((v - Math.floor(v)) * 6 - 3); }
@@ -23,81 +24,119 @@
     return out;
   }
 
-  /* ---------- drawing: zombies ---------- */
-  var LIMBS = {
-    walk: 'M16 46v10M28 46v10M12 30H1M12 37H1',
-    thrower: 'M16 46v10M28 46v10M12 34H1M31 28L37 6',
-    sleep: 'M16 46v10M28 46v10M10 30v13M34 30v13',
-    bubble: 'M16 46v10M28 46v10M10 30v13M34 30v13',
-    emerge: 'M12 30L2 18M32 30L42 18'
-  };
-  function zombie(i, card, model, x, y, s, mode) {
-    var type = card.type ? model.typeOf[card.type] : null;
-    var col = type ? type.color : GS.NONE_COLOR, d = GS.darken(col);
-    var g = ['<g class="z" data-c="' + i + '"><g transform="translate(' + x + ' ' + y + ')' + (s !== 1 ? ' scale(' + s + ')' : '') + '">'];
-    if (mode === 'bubble') g.push('<ellipse cx="22" cy="30" rx="23.5" ry="35" fill="#CDEBFA" fill-opacity="0.5" stroke="#7FC1E6" stroke-width="1.5"/>');
-    if (!card.members.length && !card.ghost) g.push('<ellipse cx="22" cy="57" rx="22" ry="6" fill="none" stroke="#D21F3C" stroke-width="2" stroke-dasharray="4 3"/>');
-    g.push('<path d="' + LIMBS[mode] + '" stroke="' + d + '" stroke-width="5" stroke-linecap="round" fill="none"/>');
-    g.push('<rect x="10" y="24" width="24" height="24" rx="5" fill="' + d + '"/>');
-    g.push('<circle cx="22" cy="14" r="12.5" fill="' + col + '" stroke="' + INK + '" stroke-width="2"/>');
-    if (mode === 'sleep') {
-      g.push('<path d="M14 14h6M24 14h6" stroke="' + INK + '" stroke-width="2" stroke-linecap="round" fill="none"/>');
-      g.push('<text x="35" y="5" font-size="13" font-weight="700" fill="#34507A">z</text>');
-    } else {
-      g.push('<path d="M17.5 13h0.01M26.5 13h0.01" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round"/>');
-      g.push('<path d="M16.3 13.4h0.01M25.3 13.4h0.01" stroke="' + INK + '" stroke-width="3.2" stroke-linecap="round"/>');
-      g.push('<path d="M16 21l2-2 2 2 2-2 2 2 2-2 2 2" stroke="' + INK + '" stroke-width="1.4" fill="none"/>');
+  /* ---------- drawing: enemy units (original artwork; every unit faces the headquarters on the left) ---------- */
+  var OUT = ' stroke="' + INK + '" stroke-width="1.6" stroke-linejoin="round"';
+  function wheels(pts, r, hub) {
+    return pts.map(function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + r + '" fill="' + INK + '"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (r * 0.36).toFixed(1) + '" fill="' + hub + '"/>'; }).join('');
+  }
+  var GLASS = '#CDEBFA';
+  var KIND = {
+    tank: function (c, d) {
+      return '<rect x="3" y="20" width="38" height="9" rx="4.5" fill="' + d + '"' + OUT + '/><path d="M9 24.5h0.01M16 24.5h0.01M23 24.5h0.01M30 24.5h0.01M36 24.5h0.01" stroke="' + INK + '" stroke-width="3.2" stroke-linecap="round"/>' +
+        '<path d="M7 20l4-7h22l4 7z" fill="' + c + '"' + OUT + '/><rect x="16" y="6" width="14" height="8" rx="2" fill="' + c + '"' + OUT + '/><path d="M16 10H1" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/>';
+    },
+    jet: function (c, d) {
+      return '<path d="M17 15l12 10h5l-7-11z" fill="' + d + '"' + OUT + '/><path d="M2 15q10-6 28-5l12-5-2 9-10 3q-16 2-28-2z" fill="' + c + '"' + OUT + '/><path d="M9 12.5q3-2.5 7-2v3z" fill="' + GLASS + '" stroke="' + INK + '" stroke-width="1"/>';
+    },
+    heli: function (c, d) {
+      return '<path d="M3 5h32M19 5v4" stroke="' + INK + '" stroke-width="2" stroke-linecap="round"/><path d="M27 12l15-3v3l-14 5z" fill="' + d + '"' + OUT + '/><circle cx="42" cy="10" r="3.2" fill="none"' + OUT + '/>' +
+        '<ellipse cx="17" cy="15" rx="12" ry="7" fill="' + c + '"' + OUT + '/><path d="M6 15q1-5 8-6v6z" fill="' + GLASS + '" stroke="' + INK + '" stroke-width="1"/>' +
+        '<path d="M8 25h19M12 21.5v3.5M22 21.5v3.5M5 19l-4 1.5" stroke="' + INK + '" stroke-width="1.6" stroke-linecap="round" fill="none"/>';
+    },
+    infantry: function (c, d) {
+      return '<path d="M18 24v6M26 24v6" stroke="' + d + '" stroke-width="4" stroke-linecap="round"/><rect x="15" y="13" width="14" height="12" rx="3" fill="' + c + '"' + OUT + '/>' +
+        '<circle cx="22" cy="8.5" r="5.5" fill="' + d + '"' + OUT + '/><path d="M15 8.5a7 7 0 0 1 14 0h2v2H13v-2z" fill="' + c + '"' + OUT + '/><path d="M3 16l19 3" stroke="' + INK + '" stroke-width="2.6" stroke-linecap="round"/>';
+    },
+    apc: function (c, d) {
+      return '<path d="M4 22l3-10h23l8 4v6z" fill="' + c + '"' + OUT + '/><rect x="14" y="6" width="10" height="6" rx="1.5" fill="' + d + '"' + OUT + '/><path d="M14 9H5" stroke="' + INK + '" stroke-width="2.6" stroke-linecap="round"/>' + wheels([[12, 24], [31, 24]], 4.8, d);
+    },
+    bomber: function (c, d) {
+      return '<path d="M1 14q5-5 19-5h18l5-6v11l-7 4H12q-8 0-11-4z" fill="' + c + '"' + OUT + '/><ellipse cx="22" cy="17" rx="12" ry="3.2" fill="' + d + '"' + OUT + '/>' +
+        '<circle cx="15" cy="19.5" r="2.6" fill="' + INK + '"/><circle cx="28" cy="19.5" r="2.6" fill="' + INK + '"/><ellipse cx="22" cy="26.5" rx="3.6" ry="1.8" fill="' + INK + '"/><path d="M5 12.5q3-2 7-2v3z" fill="' + GLASS + '" stroke="' + INK + '" stroke-width="1"/>';
+    },
+    drone: function (c, d) {
+      return '<path d="M15 14L8 10M29 14l7-4M17 19l-2 6M27 19l2 6" stroke="' + INK + '" stroke-width="2" stroke-linecap="round"/><ellipse cx="8" cy="8.5" rx="7" ry="2.2" fill="#FFFFFF" fill-opacity="0.6"' + OUT + '/><ellipse cx="36" cy="8.5" rx="7" ry="2.2" fill="#FFFFFF" fill-opacity="0.6"' + OUT + '/>' +
+        '<rect x="14" y="11" width="16" height="9" rx="3.5" fill="' + c + '"' + OUT + '/><circle cx="22" cy="22" r="2.8" fill="' + d + '"' + OUT + '/>';
+    },
+    rocket: function (c, d) {
+      return '<rect x="15" y="19" width="26" height="5" fill="' + d + '"' + OUT + '/><path d="M3 24v-8l5-4h7v12z" fill="' + c + '"' + OUT + '/><path d="M16 17L37 5l4 6-21 11z" fill="' + c + '"' + OUT + '/><path d="M24 12.5l3.5 5.5M30 9l3.5 5.5" stroke="' + INK + '" stroke-width="1"/>' + wheels([[9, 25], [24, 25], [35, 25]], 3.9, d);
+    },
+    jeep: function (c, d) {
+      return '<path d="M21 10L10 5" stroke="' + INK + '" stroke-width="2.4" stroke-linecap="round"/><path d="M3 23v-7h9l3-6h11l2 6h13v7z" fill="' + c + '"' + OUT + '/><path d="M17 11h8l1 4H15z" fill="' + GLASS + '" stroke="' + INK + '" stroke-width="1"/>' + wheels([[11, 24], [33, 24]], 4.8, d);
+    },
+    truck: function (c, d) {
+      return '<path d="M17 23V11q11-5 23 0v12z" fill="' + c + '"' + OUT + '/><path d="M3 23v-8l5-4h7v12z" fill="' + d + '"' + OUT + '/>' + wheels([[9, 25], [24, 25], [35, 25]], 3.9, d);
     }
-    if (mode === 'thrower') g.push('<path d="M29-9h15v13h-15zM32-5h9M32-1h9" transform="rotate(14 36 -2)" fill="#FFFFFF" stroke="' + INK + '" stroke-width="1.3"/>');
-    if (mode === 'emerge') g.push('<ellipse cx="22" cy="55" rx="26" ry="11" fill="#7B6650" stroke="' + INK + '" stroke-width="1.5"/>');
-    g.push('<rect x="8" y="28" width="28" height="14" rx="3" fill="#FFFFFF" stroke="' + INK + '" stroke-width="1.2"/>');
+  };
+  // A unit on its own, for the legend.
+  GS.unitIcon = function (kind, color) {
+    return '<svg viewBox="-3 0 50 31" aria-hidden="true">' + (KIND[kind] || KIND.infantry)(color, GS.darken(color)) + '</svg>';
+  };
+
+  // walk: advancing · thrower: firing at us · sleep: camped · emerge: just dropped in · bubble: white flag up
+  function unit(i, card, model, x, y, s, mode) {
+    var type = card.type ? model.typeOf[card.type] : null;
+    var col = type ? type.color : GS.NONE_COLOR, d = GS.darken(col), kind = type ? type.kind : 'infantry';
+    var g = ['<g class="z" data-c="' + i + '"><g transform="translate(' + x + ' ' + y + ')' + (s !== 1 ? ' scale(' + s + ')' : '') + '">'];
+    g.push('<rect x="-2" y="-2" width="48" height="60" fill="#FFFFFF" fill-opacity="0"/>');   // easier to hover
+    if (mode === 'emerge') g.push('<path d="M3-3Q22-27 41-3z" fill="#F3F0E6"' + OUT + '/><path d="M3-3l13 9M41-3L28 6M22-15V4" stroke="' + INK + '" stroke-width="1" fill="none"/>');
+    if (!card.members.length && !card.ghost) g.push('<ellipse cx="22" cy="39" rx="22" ry="11.5" fill="none" stroke="#D21F3C" stroke-width="2" stroke-dasharray="4 3"/>');
+    g.push((mode === 'sleep' ? '<g opacity="0.7">' : '<g>') + (KIND[kind] || KIND.infantry)(col, d) + '</g>');
+    if (mode === 'sleep') g.push('<text x="36" y="4" font-size="13" font-weight="700" fill="#34507A">z</text>');
+    if (mode === 'thrower') g.push('<path d="M0 11l-8-4 5 4-6 2 6 2-4 5 7-5z" fill="#FFB020" stroke="' + INK + '" stroke-width="1" stroke-linejoin="round"/>');
+    if (mode === 'bubble') g.push('<path d="M40 30V5" stroke="' + INK + '" stroke-width="1.6" stroke-linecap="round"/><path d="M40 5H28v8h12z" fill="#FFFFFF" stroke="' + INK + '" stroke-width="1.2" stroke-linejoin="round"/>');
+    g.push('<rect x="8" y="32" width="28" height="14" rx="3" fill="#FFFFFF" stroke="' + INK + '" stroke-width="1.2"/>');
     if (type) {
       var b = type.badge;
-      g.push('<text x="22" y="39" font-size="' + (b.length > 3 ? 8.5 : 10.5) + '" font-weight="700" text-anchor="middle" fill="' + INK + '">' + esc(b) + '</text>');
+      g.push('<text x="22" y="43" font-size="' + (b.length > 3 ? 8.5 : 10.5) + '" font-weight="700" text-anchor="middle" fill="' + INK + '">' + esc(b) + '</text>');
     }
     if (card.state) {
-      g.push('<path d="' + (mode === 'thrower' ? 'M3 22V2l11 5-11 5' : 'M41 22V2l-11 5 11 5') + '" fill="' + (card.state === 'over' ? '#D21F3C' : '#F26A1B') + '" stroke="' + INK + '" stroke-width="1.2" stroke-linejoin="round"/>');
+      g.push('<path d="' + (mode === 'bubble' ? 'M4 30V14l9 4-9 4' : 'M41 30V14l-9 4 9 4') + '" fill="' + (card.state === 'over' ? '#D21F3C' : '#F26A1B') + '" stroke="' + INK + '" stroke-width="1.2" stroke-linejoin="round"/>');
     }
-    var n = card.members.length, py = mode === 'emerge' ? 70 : 62;
+    var n = Math.min(card.members.length, 5);
     card.members.slice(0, 5).forEach(function (id, k) {
       var m = model.memberOf[id];
-      g.push('<circle cx="' + (22 + (k - (Math.min(n, 5) - 1) / 2) * 8.5).toFixed(1) + '" cy="' + py + '" r="3.6" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.3"/>');
+      g.push('<circle cx="' + (22 + (k - (n - 1) / 2) * 8.5).toFixed(1) + '" cy="53" r="3.6" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.3"/>');
     });
     g.push('</g></g>');
     return g.join('');
   }
 
-  /* ---------- drawing: plants (five original designs) ---------- */
-  function eyes(pts) {
-    return pts.map(function (p) {
-      return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="4.6" fill="#FFFFFF" stroke="' + INK + '" stroke-width="1"/><circle cx="' + (p[0] + 1.4) + '" cy="' + p[1] + '" r="2.1" fill="' + INK + '"/>';
-    }).join('');
+  /* ---------- drawing: the defenders' guns (five original designs, pointing at the enemy) ---------- */
+  var STEEL = '#4A5A52', STEEL2 = '#33413B', OLIVE = '#5F6E4B', WOOD = '#6B4A2B';
+  var BAGS = [[22, 96], [48, 96], [74, 96], [35, 85], [61, 85]].map(function (p) {
+    return '<rect x="' + p[0] + '" y="' + p[1] + '" width="26" height="12" rx="6" fill="#CDB98F"' + OUT + '/>';
+  }).join('');
+  function spokes(cx, cy, r) {
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + WOOD + '" stroke="' + INK + '" stroke-width="2"/><path d="M' + (cx - r) + ' ' + cy + 'h' + (2 * r) + 'M' + cx + ' ' + (cy - r) + 'v' + (2 * r) + '" stroke="' + INK + '" stroke-width="1.4"/><circle cx="' + cx + '" cy="' + cy + '" r="3" fill="' + INK + '"/>';
   }
-  var POT = '<path d="M34 82h52l-7 28H41z" fill="#B5633C" stroke="' + INK + '" stroke-width="2" stroke-linejoin="round"/><rect x="30" y="74" width="60" height="10" rx="3" fill="#C9764A" stroke="' + INK + '" stroke-width="2"/>';
   var ART = [
-    // pine bonsai
-    '<path d="M60 76q-5-18 8-28q8-8 0-20" stroke="#6B4A2B" stroke-width="7" fill="none" stroke-linecap="round"/><ellipse cx="38" cy="46" rx="24" ry="13" fill="#2F6B4F" stroke="' + INK + '" stroke-width="2"/><ellipse cx="82" cy="52" rx="22" ry="12" fill="#2F6B4F" stroke="' + INK + '" stroke-width="2"/><ellipse cx="62" cy="22" rx="30" ry="16" fill="#3B8262" stroke="' + INK + '" stroke-width="2"/>' + eyes([[54, 22], [70, 22]]),
-    // rose
-    '<path d="M60 76V46" stroke="#2F6B4F" stroke-width="5"/><ellipse cx="44" cy="62" rx="13" ry="6" transform="rotate(-25 44 62)" fill="#3E8E41" stroke="' + INK + '" stroke-width="1.8"/><ellipse cx="76" cy="62" rx="13" ry="6" transform="rotate(25 76 62)" fill="#3E8E41" stroke="' + INK + '" stroke-width="1.8"/><circle cx="60" cy="28" r="24" fill="#D81B60" stroke="' + INK + '" stroke-width="2"/><path d="M44 16q16-14 32 0M40 34q20 22 40 0" stroke="#8E0E3C" stroke-width="2.2" fill="none"/>' + eyes([[52, 28], [68, 28]]),
-    // bamboo
-    '<rect x="40" y="18" width="10" height="58" fill="#8BC34A" stroke="' + INK + '" stroke-width="1.8"/><rect x="54" y="4" width="16" height="72" fill="#9CCC65" stroke="' + INK + '" stroke-width="1.8"/><rect x="74" y="24" width="10" height="52" fill="#8BC34A" stroke="' + INK + '" stroke-width="1.8"/><path d="M40 38h10M40 58h10M54 44h16M54 62h16M74 46h10M74 62h10M50 26q-16-8-22 4q14 4 22-4M84 34q16-8 22 4q-14 4-22-4" stroke="' + INK + '" stroke-width="1.6" fill="#7CB342"/>' + eyes([[58, 22], [67, 22]]),
-    // lavender
-    '<path d="M60 76L38 34M60 76V26M60 76L82 34" stroke="#5B8C5A" stroke-width="3.2" fill="none"/><ellipse cx="36" cy="26" rx="8" ry="17" transform="rotate(-18 36 26)" fill="#9575CD" stroke="' + INK + '" stroke-width="1.8"/><ellipse cx="84" cy="26" rx="8" ry="17" transform="rotate(18 84 26)" fill="#9575CD" stroke="' + INK + '" stroke-width="1.8"/><ellipse cx="60" cy="20" rx="12" ry="20" fill="#7E57C2" stroke="' + INK + '" stroke-width="2"/>' + eyes([[55, 18], [65, 18]]),
-    // kumquat tree
-    '<path d="M60 76V56" stroke="#6B4A2B" stroke-width="7"/><circle cx="60" cy="34" r="29" fill="#3E8E41" stroke="' + INK + '" stroke-width="2"/>' + [[40, 24], [80, 26], [46, 50], [74, 50], [60, 12]].map(function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="5.2" fill="#F28C28" stroke="' + INK + '" stroke-width="1.2"/>'; }).join('') + eyes([[52, 34], [68, 34]])
+    // field cannon
+    '<path d="M46 72L22 86" stroke="' + INK + '" stroke-width="6" stroke-linecap="round"/><path d="M42 57l58-27 4 9-56 29z" fill="' + STEEL + '"' + OUT + '/><circle cx="45" cy="63" r="9" fill="' + STEEL2 + '"' + OUT + '/>' + spokes(54, 72, 15),
+    // howitzer with gun shield
+    '<path d="M46 60l38-40 10 9-36 42z" fill="' + OLIVE + '"' + OUT + '/><path d="M52 40l24 22-7 7-24-22z" fill="#8A9A72"' + OUT + '/>' + spokes(50, 74, 13),
+    // twin anti-aircraft gun
+    '<path d="M60 80L40 94M60 80l20 14M60 80V66" stroke="' + INK + '" stroke-width="4" stroke-linecap="round"/><path d="M50 60l38-46 4 4-36 46z" fill="' + STEEL2 + '"' + OUT + '/><path d="M59 66l38-46 4 4-36 46z" fill="' + STEEL + '"' + OUT + '/><circle cx="58" cy="68" r="10" fill="' + STEEL + '"' + OUT + '/><circle cx="46" cy="50" r="6" fill="none"' + OUT + '/>',
+    // mortar
+    '<ellipse cx="50" cy="84" rx="17" ry="5" fill="' + STEEL2 + '"' + OUT + '/><path d="M72 40l16 44M72 40l24 38" stroke="' + INK + '" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M46 82l24-56 10 4-22 56z" fill="' + STEEL + '"' + OUT + '/><ellipse cx="84" cy="18" rx="5" ry="3" transform="rotate(-66 84 18)" fill="' + INK + '"/>',
+    // rocket battery
+    '<path d="M40 68l48-30 11 17-48 30z" fill="' + OLIVE + '"' + OUT + '/><path d="M52 61l10 16M64 53l10 16M76 46l10 16" stroke="' + INK + '" stroke-width="1.2"/><path d="M88 38l11 17" stroke="' + INK + '" stroke-width="4" stroke-linecap="round"/><rect x="50" y="76" width="24" height="9" fill="' + STEEL2 + '"' + OUT + '/>' + wheels([[48, 86], [76, 86]], 6.5, '#8A9A72')
   ];
-  function plant(m, x, y) {
+  function gun(m, x, y) {
     var label = m.short + ' · ' + tr('front', m.front);
     return '<g class="p" data-m="' + esc(m.id) + '" tabindex="0" role="button" aria-label="' + esc(m.name + ', ' + tr('front', m.front)) + '" transform="translate(' + x + ' ' + y + ')">' +
-      '<rect x="0" y="-4" width="124" height="146" fill="#FFFFFF" fill-opacity="0"/>' + ART[m.design] + POT +
-      '<circle cx="104" cy="40" r="5.5" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.3"/><circle cx="116" cy="35" r="4.4" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.3"/>' +
+      '<rect x="0" y="-4" width="124" height="146" fill="#FFFFFF" fill-opacity="0"/>' +
+      // the crew's pennant carries the member's colour
+      '<path d="M26 96V26" stroke="' + INK + '" stroke-width="2" stroke-linecap="round"/><path d="M26 27h20l-6 7 6 7H26z" fill="' + m.color + '"' + OUT + '/>' +
+      ART[m.design] + BAGS +
+      '<circle cx="106" cy="34" r="5" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.3"/><circle cx="117" cy="28" r="3.8" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.3"/>' +
       '<rect class="tag" x="2" y="114" width="118" height="23" rx="11.5" fill="' + m.color + '" stroke="#FFFFFF" stroke-width="1.5"/>' +
       '<text x="61" y="130.5" font-size="12.5" font-weight="700" text-anchor="middle" fill="#FFFFFF">' + esc(cut(label, 17)) + '</text></g>';
   }
 
   /* ---------- the scene ---------- */
   // opts.caps (zone → card count) sizes the map for the busiest moment of a replay so it does not jump between
-  // frames; opts.plantIds keeps the same plants in the same pots.
+  // frames; opts.plantIds keeps the same guns in the same emplacements.
   function scene(model, opts) {
     opts = opts || {};
     var zones = model.zones, caps = opts.caps || {};
@@ -127,7 +166,7 @@
     var S = [], cards = [], plantPos = {};
     function put(card, x, y, s, mode) {
       cards.push({ card: card, x: x + 22 * s, y: y + 26 * s });
-      return zombie(cards.length - 1, card, model, x, y, s, mode);
+      return unit(cards.length - 1, card, model, x, y, s, mode);
     }
 
     // ground
@@ -140,27 +179,28 @@
       x0 += widths[i];
     });
 
-    // things being thrown at the house
+    // incoming fire from the units that are shelling headquarters
     if (zx.t && zones.t.length) {
       var tx = zx.t.x + zx.t.w / 2;
       [[-50, -70], [0, -110], [50, -40]].forEach(function (a) {
         S.push('<path d="M' + (tx + a[0]) + ' 150Q' + Math.round((tx + a[0] + 120) / 2) + ' ' + a[1] + ' 120 150" fill="none" stroke="' + INK + '" stroke-width="1.6" stroke-dasharray="7 6" stroke-opacity="0.55"/>');
       });
-      [[0.78, 26, -12], [0.56, 22, 8], [0.36, 34, -6], [0.9, 44, 16]].slice(0, Math.min(4, zones.t.length)).forEach(function (p) {
-        S.push('<g transform="translate(' + Math.round(120 + (tx - 120) * p[0]) + ' ' + p[1] + ') rotate(' + p[2] + ')"><rect x="-13" y="-10" width="26" height="20" fill="#FFFFFF" stroke="' + INK + '" stroke-width="1.5"/><path d="M-8-4h16M-8 1h16M-8 6h9" stroke="' + INK + '" stroke-width="1.3"/></g>');
+      [[0.78, 26, -8], [0.56, 22, -2], [0.36, 34, 10], [0.9, 44, -18]].slice(0, Math.min(4, zones.t.length)).forEach(function (p) {
+        S.push('<g transform="translate(' + Math.round(120 + (tx - 120) * p[0]) + ' ' + p[1] + ') rotate(' + p[2] + ')"><path d="M-12 0q6-6 16-6h6v12h-6q-10 0-16-6z" fill="#F3F0E6"' + OUT + '/><path d="M10-6l6-4v20l-6-4z" fill="#C8453B"' + OUT + '/></g>');
       });
     }
 
-    // the house
-    S.push('<path d="M14 210h176v' + (H - 250) + 'H14z" fill="#EADFC8" stroke="' + INK + '" stroke-width="3"/>');
-    S.push('<path d="M0 214L102 84l102 130z" fill="#B5533C" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/>');
-    [250, 400].forEach(function (wy) {
-      if (wy + 70 > H - 230) return;
-      [36, 112].forEach(function (wx) {
-        S.push('<rect x="' + wx + '" y="' + wy + '" width="56" height="70" fill="#F7D774" stroke="' + INK + '" stroke-width="2.5"/><path d="M' + (wx + 28) + ' ' + wy + 'v70M' + wx + ' ' + (wy + 35) + 'h56" stroke="' + INK + '" stroke-width="2"/>');
-      });
+    // headquarters: a small fort with a flag
+    var wallTop = 200, wallH = H - wallTop - 40;
+    S.push('<path d="M102 178V92" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/><path d="M102 94h48l-11 13 11 13h-48z" fill="#C8453B"' + OUT + '/>');
+    [14, 53, 92, 131, 170].forEach(function (bx) { S.push('<rect x="' + bx + '" y="' + (wallTop - 22) + '" width="20" height="24" fill="#D9D2C3" stroke="' + INK + '" stroke-width="3"/>'); });
+    S.push('<rect x="14" y="' + wallTop + '" width="176" height="' + wallH + '" fill="#D9D2C3" stroke="' + INK + '" stroke-width="3"/>');
+    for (var by = wallTop + 40; by < wallTop + wallH - 20; by += 40) S.push('<path d="M14 ' + by + 'h176" stroke="' + INK + '" stroke-width="1" stroke-opacity="0.25"/>');
+    [wallTop + 56, wallTop + 176].forEach(function (wy) {
+      if (wy + 40 > H - 220) return;
+      [44, 96, 148].forEach(function (wx) { S.push('<rect x="' + wx + '" y="' + wy + '" width="12" height="40" rx="6" fill="' + INK + '"/>'); });
     });
-    S.push('<rect x="66" y="' + (H - 190) + '" width="72" height="150" fill="#6B4A2B" stroke="' + INK + '" stroke-width="2.5"/><circle cx="126" cy="' + (H - 110) + '" r="4" fill="#F5C542"/>');
+    S.push('<path d="M64 ' + (H - 40) + 'v-96a38 38 0 0 1 76 0v96z" fill="' + WOOD + '" stroke="' + INK + '" stroke-width="3"/><path d="M102 ' + (H - 172) + 'v132" stroke="' + INK + '" stroke-width="2"/>');
     S.push('<path d="M200 150V' + (H - 8) + '" stroke="#FFFFFF" stroke-width="5" stroke-dasharray="3 13" stroke-linecap="round"/>');
 
     // zone signs
@@ -168,12 +208,12 @@
       var w = zx[z].w - 16, sub = model.listsIn[z].join(' · ');
       S.push('<g transform="translate(' + (zx[z].x + 8) + ' 76)"><title>' + esc(tr('zd_' + z) + (sub ? ' — ' + sub : '')) + '</title>' +
         '<rect width="' + w + '" height="62" rx="5" fill="#6B4A2B" stroke="' + INK + '" stroke-width="2"/>' +
-        '<text x="11" y="27" font-size="20" font-weight="700" fill="#FFFFFF">' + esc(cut(tr('z_' + z), (w - 64) / 10.5)) + '</text>' +
+        '<text x="11" y="27" font-size="20" font-weight="700" fill="#FFFFFF">' + esc(cut(tr('z_' + z), (w - 58) / 9.8)) + '</text>' +
         '<text x="' + (w - 11) + '" y="29" font-size="25" font-weight="700" text-anchor="end" fill="#F7D774">' + zones[z].length + '</text>' +
         '<text x="11" y="49" font-size="12" fill="#F3E9D6">' + esc(cut(sub, (w - 22) / 6.4)) + '</text></g>');
     });
 
-    // zombies on the field
+    // enemy units on the field
     shown.forEach(function (z) {
       var L = zones[z], bx = zx[z].x + 13;
       L.forEach(function (card, i) {
@@ -184,13 +224,13 @@
       });
     });
 
-    // plants
+    // the defenders' guns
     var spacing = Math.min(150, (H - 160) / perCol);
     plants.forEach(function (m, i) {
       var col = Math.floor(i / perCol), row = i % perCol;
       var px = 206 + col * 130, py = 152 + row * spacing;
-      plantPos[m.id] = { x: px + 112, y: py + 38 };
-      S.push(plant(m, px, py));
+      plantPos[m.id] = { x: px + 110, y: py + 32 };
+      S.push(gun(m, px, py));
     });
 
     // below the field: cards awaiting an outcome, and money to collect
@@ -303,7 +343,7 @@
     }
     function fillTable() {
       var cols = sc.shown.concat(view.listsIn.b.length ? ['b'] : [], view.listsIn.c.length ? ['c'] : []);
-      var head = h('tr', null, [h('th', { text: tr('tb_plant') })].concat(cols.map(function (z) { return h('th', { class: 'num', text: tr('z_' + z) }); }), [h('th', { class: 'num', text: tr('tb_total') })]));
+      var head = h('tr', null, [h('th', { text: tr('tb_gun') })].concat(cols.map(function (z) { return h('th', { class: 'num', text: tr('z_' + z) }); }), [h('th', { class: 'num', text: tr('tb_total') })]));
       var line = function (label, color, counts, tot, cls) {
         return h('tr', { class: cls || '' }, [h('td', null, [color ? h('i', { class: 'dot', style: 'background:' + color }) : h('i', { class: 'dot ring' }), label])].concat(
           cols.map(function (z) { var v = counts[z] || 0; return h('td', { class: 'num' + (v ? '' : ' zero'), text: v ? String(v) : '–' }); }),
@@ -412,7 +452,7 @@
         var byId = {}; rawCards.forEach(function (c) { byId[c.id] = c; });
         rp = { days: days, hist: hist, times: times, stepMs: stepMs, k: 0, playing: false, speed: rp ? rp.speed : 1, byId: byId, caps: {}, plantIds: null, truncatedAt: res.truncated ? start : null, empty: !hist.events.length };
         rp.frameMs = 800 / rp.speed;
-        // size the map for the busiest moment, and keep every plant that ever had a card on the field
+        // size the map for the busiest moment, and keep every gun that ever had a card on the field
         var seen = {};
         for (var k = 0; k < times.length; k++) {
           var m = modelAt(k);
@@ -505,12 +545,13 @@
         svg = null; sc = null;
       } else {
         var s = live.stats;
+        var icon = function (kind, color) { var el = h('span', { class: 'ico' }); el.innerHTML = GS.unitIcon(kind, color); return el; };
         var chips = live.types.filter(function (x) { return x.top; }).map(function (x) {
           return h('button', { class: 'chip', type: 'button', 'data-t': x.key, 'aria-pressed': 'false', onclick: function () { toggle('type', x.key); } },
-            [h('i', { style: 'background:' + x.color }), h('span', { text: (x.badge !== x.name ? x.badge + ' · ' : '') + cut(x.name || '?', 26) }), h('b', { text: String(x.count) })]);
+            [icon(x.kind, x.color), h('span', { text: (x.badge !== x.name ? x.badge + ' · ' : '') + cut(x.name || '?', 26) }), h('b', { text: String(x.count) })]);
         });
         var extra = function (id, color, text, n) {
-          return h('button', { class: 'chip', type: 'button', 'data-t': id, 'aria-pressed': 'false', onclick: function () { toggle('type', id); } }, [h('i', { style: 'background:' + color }), h('span', { text: text }), h('b', { text: String(n) })]);
+          return h('button', { class: 'chip', type: 'button', 'data-t': id, 'aria-pressed': 'false', onclick: function () { toggle('type', id); } }, [icon(id === '__other' ? 'truck' : 'infantry', color), h('span', { text: text }), h('b', { text: String(n) })]);
         };
         if (s.other) chips.push(extra('__other', GS.OTHER_COLOR, tr('lg_other'), s.other));
         if (s.noLabel || rp) chips.push(extra('__none', GS.NONE_COLOR, tr('lg_none'), s.noLabel));

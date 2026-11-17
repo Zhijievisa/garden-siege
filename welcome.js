@@ -1,4 +1,4 @@
-/* Garden Siege — welcome / getting-started modal (opened by the on-enable capability) */
+/* Siege Line — welcome / getting-started modal (opened by the on-enable capability) */
 (function () {
   'use strict';
   var GS = window.GS, h = GS.h, tr = GS.tr;

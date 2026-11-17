@@ -1,4 +1,4 @@
-/* Garden Siege — iframe connector (loaded by index.html, runs only in Trello's hidden iframe) */
+/* Siege Line — iframe connector (loaded by index.html, runs only in Trello's hidden iframe) */
 (function () {
   'use strict';
   var GS = window.GS, tr = GS.tr;

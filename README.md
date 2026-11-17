@@ -1,23 +1,25 @@
-# Garden Siege
+# Siege Line
 
-A Trello Power-Up that draws a board as a battle map. Every card is a zombie walking towards your house; every
-board member is a plant defending it. The nearer a zombie is to the house, the sooner it needs you.
+A Trello Power-Up that draws a board as a battle map. Every card is an enemy unit advancing on your headquarters;
+every board member is a gun defending it. The nearer a unit is to headquarters, the sooner it needs you.
 
 Version 1.1.0 · English and 简体中文
 
 ## What it shows
 
-- **Zones from lists.** Each list is given a zone: At the gate, Throwers, Advancing, Midfield, Dozing, Emerging,
-  Bubbled (awaiting an outcome), Coins (money to collect) or Hidden. Until zones are chosen they are guessed from
+- **Zones from lists.** Each list is given a zone: At the walls, Shelling, Advancing, Midfield, Camped, Inbound,
+  Truce (awaiting an outcome), Spoils (money to collect) or Hidden. Until zones are chosen they are guessed from
   list names.
-- **Zombie types from labels.** A card's first label decides its colour and badge.
-- **Plants from members.** Dots under a zombie are the members assigned to it. A red dashed ring means nobody is.
+- **Unit types from labels.** A card's first label decides what it is: tank, jet, attack helicopter, infantry,
+  armoured car, bomber, drone, rocket truck or jeep, with its own colour and badge.
+- **Guns from members.** Each member is an artillery piece. Dots under a unit are the members assigned to it. A
+  red dashed ring means nobody is.
 - **Due dates.** Orange flag for due soon, red flag for overdue.
-- **Highlighting.** Click a plant to see everything that member is assigned to; click a type to see one label.
+- **Highlighting.** Click a gun to see everything that member is assigned to; click a type to see one label.
 - **Firepower table.** Each member's card count by zone, plus unassigned cards.
 - **Replay.** With the member's read-only permission, plays back the last 7, 30 or 90 days from the board's
-  activity history: cards appear, walk between zones and leave.
-- Click any zombie or coin to open its card.
+  activity history: units appear, move between zones and leave.
+- Click any unit or coin to open its card.
 
 ## Data and privacy
 
@@ -60,7 +62,7 @@ mode with a fictional board and a made-up history. Add `?auth=0` to see the not-
 ## Known limits
 
 - Reads open cards in open lists only, as provided by the Trello client library.
-- Only the nine most common first labels get their own colour; other labels are grey.
+- Only the nine most common first labels get their own unit and colour; other labels are grey trucks.
 - A card shows at most five member dots.
 - Replay follows list positions only: labels and members are today's, vanished cards are grey, and at most 10,000
   history events are loaded.
@@ -69,6 +71,7 @@ mode with a fictional board and a made-up history. Add `?auth=0` to see the not-
 
 ## Changelog
 
-**1.1.0** Replay from the board's activity history, with read-only authorisation.
+**1.1.0** Replay from the board's activity history, with read-only authorisation. Military artwork: enemy units by
+label, guns for members.
 
 **1.0.0** First version.

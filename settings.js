@@ -1,4 +1,4 @@
-/* Garden Siege — settings: language, the "due soon" window, and which zone each list belongs to.
+/* Siege Line — settings: language, the "due soon" window, and which zone each list belongs to.
  * Used twice: in the Power-Up settings popup (settings.html) and inline inside the battle map.
  */
 (function () {
