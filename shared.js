@@ -6,10 +6,10 @@
 (function (root) {
   'use strict';
   var GS = root.GS = {};
-  GS.VERSION = '1.3.0';
+  GS.VERSION = '1.3.1';
   GS.CFG_KEY = 'cfg';
   // The Power-Up's public API key (Power-Up admin → Authorization → Trello Auth). Replay is hidden while this is empty.
-  GS.APP_KEY = '';
+  GS.APP_KEY = '8bd2d0ae948399044c39bb325ead5baf';   // public client-side key of this Power-Up (not the secret)
   GS.APP_NAME = 'Siege Line';
   GS.appOpts = function () { return GS.APP_KEY ? { appKey: GS.APP_KEY, appName: GS.APP_NAME } : undefined; };
 

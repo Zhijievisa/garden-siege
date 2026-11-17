@@ -3,7 +3,7 @@
 A Trello Power-Up that draws a board as a battle map. Every card is an enemy unit advancing on your headquarters;
 every board member is a gun defending it. The nearer a unit is to headquarters, the sooner it needs you.
 
-Version 1.3.0 · English and 简体中文
+Version 1.3.1 · English and 简体中文
 
 ## What it shows
 
@@ -75,6 +75,8 @@ and style URLs in every `.html` file together, so users get one consistent set o
 - Artwork is original to this project.
 
 ## Changelog
+
+**1.3.1** Replay switched on (API key set; allowed origin `https://siege-line.pages.dev`).
 
 **1.3.0** Security hardening for Trello's public review: no inline scripts (pages start from `boot.js`), a strict
 Content-Security-Policy on every page (`<meta>` tag) and as a response header (`_headers`), plus HSTS,
