@@ -257,7 +257,7 @@
       }
       total = H + sh;
     }
-    S.push('<g id="gs-lines"></g>');
+    S.push('<g id="gs-lines"></g><g id="gs-fx"></g>');
     return { html: S.join(''), W: W, H: total, cards: cards, plantPos: plantPos, shown: shown, plantIds: plants.map(function (m) { return m.id; }) };
   }
 
@@ -271,6 +271,8 @@
     var svg = null, tip = null, stage = null, tilesBox = null, tableBox = null, panel = null;
     var panelOpen = false, authOpen = false, notice = null;
     var rp = null, rpUi = null, timer = null;                    // replay state, its controls, the play timer
+    var lastOld = {};                                            // where each card was drawn in the previous frame
+    var FORT = { x: 150, y: 106 };                               // shots by someone without a gun on the map leave from the flag
 
     function fmtDate(ms, withTime) {
       var o = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -318,6 +320,10 @@
       if (c.labels.length) rows.push(h('div', { class: 'tip-row' }, [h('span', { text: tr('tip_labels') }), c.labels.join(', ')]));
       rows.push(h('div', { class: 'tip-row' }, [h('span', { text: tr('tip_plants') }), c.members.length ? c.members.map(function (id) { return view.memberOf[id].name; }).join(', ') : tr('tip_none')]));
       if (c.due) rows.push(h('div', { class: 'tip-row' + (c.state ? ' ' + c.state : '') }, [h('span', { text: tr('tip_due') }), fmtDate(new Date(c.due).getTime())]));
+      if (rp && GS.FIELD.indexOf(c.zone) === -1) {
+        var kx = lastKill(c.id, rp.times[rp.k]);
+        if (kx && kx.by.length) rows.push(h('div', { class: 'tip-row' }, [h('span', { text: tr('tip_killed') }), namesOf(kx.by) + ' · ' + fmtDate(kx.t)]));
+      }
       GS.fill(tip, rows);
       tip.hidden = false;
       var box = stage.getBoundingClientRect(), x = ev.clientX - box.left + 14, y = ev.clientY - box.top + 14;
@@ -343,13 +349,16 @@
     }
     function fillTable() {
       var cols = sc.shown.concat(view.listsIn.b.length ? ['b'] : [], view.listsIn.c.length ? ['c'] : []);
-      var head = h('tr', null, [h('th', { text: tr('tb_gun') })].concat(cols.map(function (z) { return h('th', { class: 'num', text: tr('z_' + z) }); }), [h('th', { class: 'num', text: tr('tb_total') })]));
-      var line = function (label, color, counts, tot, cls) {
+      var score = rp ? scoreAt(rp.k) : null;
+      var head = h('tr', null, [h('th', { text: tr('tb_gun') })].concat(cols.map(function (z) { return h('th', { class: 'num', text: tr('z_' + z) }); }), [h('th', { class: 'num', text: tr('tb_total') })],
+        score ? [h('th', { class: 'num', text: tr('tb_kills') })] : []));
+      var line = function (label, color, counts, tot, cls, kills) {
         return h('tr', { class: cls || '' }, [h('td', null, [color ? h('i', { class: 'dot', style: 'background:' + color }) : h('i', { class: 'dot ring' }), label])].concat(
           cols.map(function (z) { var v = counts[z] || 0; return h('td', { class: 'num' + (v ? '' : ' zero'), text: v ? String(v) : '–' }); }),
-          [h('td', { class: 'num strong', text: String(tot) })]));
+          [h('td', { class: 'num strong', text: String(tot) })],
+          score ? [h('td', { class: 'num strong' + (kills ? '' : ' zero'), text: kills ? String(kills) : '–' })] : []));
       };
-      var body = view.members.map(function (m) { return line(m.name, m.color, m.counts, m.total); });
+      var body = view.members.map(function (m) { return line(m.name, m.color, m.counts, m.total, '', score && score[m.id] ? score[m.id].n : 0); });
       if (view.unguarded.total) body.push(line(tr('st_ung'), null, view.unguarded.counts, view.unguarded.total, 'ung'));
       GS.fill(tableBox, [
         h('h2', { text: tr('tb_title') }), h('p', { class: 'muted small', text: tr('tb_sub') }),
@@ -360,6 +369,7 @@
     function paint(animate, ms) {
       var old = {};
       if (animate && sc) sc.cards.forEach(function (it) { old[it.card.id] = it; });
+      lastOld = old;
       sc = scene(view, rp ? { caps: rp.caps, plantIds: rp.plantIds } : null);
       svg.setAttribute('viewBox', '0 0 ' + sc.W + ' ' + sc.H);
       svg.innerHTML = sc.html;
@@ -388,29 +398,105 @@
       var st = stateAt(k), cards = [], id, base;
       for (id in st) {
         if (!st[id]) continue;
-        base = rp.byId[id];
+        base = rp.byId[id] || rp.ghost[id];
         cards.push({ id: id, name: rp.hist.names[id] || '', idList: st[id], labels: base ? base.labels : [], members: base ? base.members : [], due: null, dueComplete: true, ghost: !base });
       }
       return GS.buildModel(lists, cards, cfg, rp.times[k], live);
     }
+    // A unit is destroyed when its card leaves the field (to Truce, Spoils, a hidden list, or off the board).
+    // Credit goes to the members assigned to the card; if nobody is assigned, to whoever moved it.
+    function onField(list) { return !!list && GS.FIELD.indexOf(live.zoneOf[list]) !== -1; }
+    function buildKills() {
+      var kills = [], people = {};
+      rp.hist.events.forEach(function (e) {
+        if (!onField(e.from) || onField(e.to)) return;
+        var base = rp.byId[e.id] || rp.ghost[e.id], by = [], via = '';
+        ((base && base.members) || []).forEach(function (m) {
+          if (!m || !m.id || by.indexOf(m.id) !== -1) return;
+          by.push(m.id);
+          if (!people[m.id]) people[m.id] = String(m.fullName || m.username || m.initials || '?').trim();
+        });
+        if (!by.length && e.by && e.by.id) { by = [e.by.id]; via = 'actor'; if (!people[e.by.id]) people[e.by.id] = e.by.name; }
+        kills.push({ t: e.t, id: e.id, by: by, via: via });
+      });
+      rp.kills = kills; rp.people = people;
+    }
+    function shortName(id) {
+      var m = live.memberOf[id];
+      return m ? m.short : String(rp.people[id] || '?').split(/\s+/)[0].slice(0, 12);
+    }
+    function namesOf(ids) { return ids.map(shortName).join(' + '); }
+    function colorOf(id) { var m = (view && view.memberOf[id]) || live.memberOf[id]; return m && m.color ? m.color : '#5E6C84'; }
+    function lastKill(id, T) {
+      var found = null;
+      rp.kills.forEach(function (x) { if (x.id === id && x.t <= T) found = x; });
+      return found;
+    }
+    function scoreAt(k) {
+      var T = rp.times[k], s = {};
+      rp.kills.forEach(function (x) {
+        if (x.t > T) return;
+        x.by.forEach(function (id) { var r = s[id] || (s[id] = { id: id, n: 0, joint: 0 }); r.n++; if (x.by.length > 1) r.joint++; });
+      });
+      return s;
+    }
+    // The shot itself: a tracer from each credited gun to where the unit stood, a burst, and the gunners' names.
+    function fireFx(k, ms) {
+      var layer = svg && svg.querySelector('#gs-fx');
+      if (!layer || !sc) return;
+      var from = k ? rp.times[k - 1] : -Infinity, to = rp.times[k], out = [], shown = 0;
+      rp.kills.forEach(function (x) {
+        if (x.t <= from || x.t > to) return;
+        var at = lastOld[x.id];
+        if (!at || shown >= 14) return;
+        shown++;
+        var X = Math.round(at.x), Y = Math.round(at.y);
+        x.by.forEach(function (id) {
+          var p = sc.plantPos[id] || FORT;
+          out.push('<path d="M' + p.x + ' ' + p.y + 'L' + X + ' ' + Y + '" fill="none" stroke="' + colorOf(id) + '" stroke-width="3.5" stroke-linecap="round"/>');
+        });
+        out.push('<g transform="translate(' + X + ' ' + Y + ')"><path d="M0-24L6-9 21-13 12 0 21 13 6 9 0 24-6 9-21 13-12 0-21-13-6-9z" fill="#F5C542" stroke="#C8453B" stroke-width="2.5" stroke-linejoin="round"/><circle r="6" fill="#FFF3C4"/></g>');
+        if (shown <= 8 && x.by.length) out.push('<text x="' + X + '" y="' + (Y - 30) + '" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2A24" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" paint-order="stroke">' + esc(namesOf(x.by)) + '</text>');
+      });
+      if (!out.length) return;
+      layer.innerHTML = out.join('');
+      if (!STILL && layer.animate) layer.animate([{ opacity: 1 }, { opacity: 1, offset: 0.65 }, { opacity: 0 }], { duration: Math.max(500, ms), fill: 'forwards' });
+    }
     function stepSummary(k) {
       var from = k ? rp.times[k - 1] : -Infinity, to = rp.times[k], zoneOf = live.zoneOf;
-      var arrived = 0, moved = 0, left = 0, lines = [];
-      var z = function (list) { var v = list ? zoneOf[list] : null; return v && v !== 'x' ? v : null; };
+      var arrived = 0, moved = 0, lines = [];
+      var kills = rp.kills.filter(function (x) { return x.t > from && x.t <= to; });
       rp.hist.events.forEach(function (e) {
         if (e.t <= from || e.t > to) return;
-        var a = z(e.from), b = z(e.to);
-        if (a === b) return;
-        if (!a) arrived++; else if (!b) left++; else moved++;
-        if (lines.length < 4) lines.push((rp.hist.names[e.id] || '?') + ': ' + (a ? tr('z_' + a) : tr('rp_new')) + ' → ' + (b ? tr('z_' + b) : tr('rp_gone')));
+        var a = onField(e.from), b = onField(e.to);
+        if (!b) return;                                   // leaving the field is a kill, listed separately
+        if (a && zoneOf[e.from] === zoneOf[e.to]) return;
+        if (!a) arrived++; else moved++;
+        if (lines.length < 3) lines.push((rp.hist.names[e.id] || '?') + ': ' + (a ? tr('z_' + zoneOf[e.from]) : tr('rp_new')) + ' → ' + tr('z_' + zoneOf[e.to]));
       });
-      return { text: arrived + moved + left ? tr('rp_step', arrived, moved, left) : tr('rp_quiet'), lines: lines };
+      return { text: arrived + moved + kills.length ? tr('rp_step', arrived, moved, kills.length) : tr('rp_quiet'), kills: kills, lines: lines };
+    }
+    function killLine(x) {
+      var name = rp.hist.names[x.id] || '?';
+      var text = !x.by.length ? tr('rp_kill_unknown', name) : tr(x.via === 'actor' ? 'rp_kill_actor' : 'rp_kill', namesOf(x.by), name);
+      return h('div', { class: 'rp-kill' }, x.by.map(function (id) { return h('i', { class: 'dot', style: 'background:' + colorOf(id) }); }).concat([h('span', { text: text })]));
+    }
+    function fillScore() {
+      if (!rpUi) return;
+      var s = scoreAt(rp.k), rows = Object.keys(s).map(function (id) { return s[id]; });
+      rows.sort(function (a, b) { return b.n - a.n || (shortName(a.id) < shortName(b.id) ? -1 : 1); });
+      GS.fill(rpUi.score, [h('span', { class: 'legend-title', text: tr('rp_score') })].concat(rows.length
+        ? rows.map(function (r) {
+          return h('span', { class: 'score', title: tr('rp_score_tip', r.n, r.joint) }, [h('i', { class: 'dot', style: 'background:' + colorOf(r.id) }), h('span', { text: shortName(r.id) }), h('b', { text: String(r.n) })]);
+        })
+        : [h('span', { class: 'muted', text: tr('rp_score_none') })]));
     }
     function showFrame(k, animate) {
       rp.k = Math.max(0, Math.min(rp.times.length - 1, k));
       view = modelAt(rp.k);
       var ms = Math.round(rp.frameMs * 0.85);
       paint(animate, ms);
+      if (animate) fireFx(rp.k, ms);
       fillTiles(); fillTable();
       if (rpUi) {
         rpUi.slider.value = String(rp.k);
@@ -418,7 +504,11 @@
         rpUi.when.textContent = fmtDate(rp.times[rp.k], rp.stepMs < DAY);
         var sum = stepSummary(rp.k);
         rpUi.step.textContent = sum.text;
-        GS.fill(rpUi.log, sum.lines.map(function (l) { return h('div', { text: l }); }));
+        var shownKills = sum.kills.slice(0, 6);
+        GS.fill(rpUi.log, shownKills.map(killLine)
+          .concat(sum.kills.length > shownKills.length ? [h('div', { text: tr('rp_more', sum.kills.length - shownKills.length) })] : [])
+          .concat(sum.lines.map(function (l) { return h('div', { text: l }); })));
+        fillScore();
         rpUi.play.textContent = rp.playing ? tr('rp_pause') : tr('rp_play');
       }
     }
@@ -450,8 +540,16 @@
         for (var T = start; T < now; T += stepMs) times.push(T);
         times.push(now);
         var byId = {}; rawCards.forEach(function (c) { byId[c.id] = c; });
-        rp = { days: days, hist: hist, times: times, stepMs: stepMs, k: 0, playing: false, speed: rp ? rp.speed : 1, byId: byId, caps: {}, plantIds: null, truncatedAt: res.truncated ? start : null, empty: !hist.events.length };
+        // cards that are no longer open on the board: fetch their labels and members, most recent first
+        var gone = [], seenGone = {};
+        for (var gi = hist.events.length - 1; gi >= 0; gi--) {
+          var gid = hist.events[gi].id;
+          if (!byId[gid] && !seenGone[gid]) { seenGone[gid] = 1; gone.push(gid); }
+        }
+        return GS.fetchCards(t, gone).then(function (ghost) {
+        rp = { days: days, hist: hist, times: times, stepMs: stepMs, k: 0, playing: false, speed: rp ? rp.speed : 1, byId: byId, ghost: ghost || {}, caps: {}, plantIds: null, truncatedAt: res.truncated ? start : null, empty: !hist.events.length };
         rp.frameMs = 800 / rp.speed;
+        buildKills();
         // size the map for the busiest moment, and keep every gun that ever had a card on the field
         var seen = {};
         for (var k = 0; k < times.length; k++) {
@@ -463,6 +561,7 @@
         notice = rp.empty ? { cls: 'info', text: tr('rp_none') } : (rp.truncatedAt ? { cls: 'info', text: tr('rp_trunc', fmtDate(rp.truncatedAt)) } : null);
         view = modelAt(0); draw();
         if (!rp.empty) setPlaying(true);
+        });
       }).catch(function (e) {
         rp = null; view = live;
         if (e && e.code === 401) { GS.auth(t).clear(); notice = null; authOpen = true; }
@@ -505,12 +604,14 @@
       var play = h('button', { type: 'button', class: 'primary', id: 'gs-rp-play', text: tr('rp_play'), onclick: function () { setPlaying(!rp.playing); } });
       var slider = h('input', { type: 'range', id: 'gs-rp-pos', min: '0', max: String(rp.times.length - 1), step: '1', value: String(rp.k), 'aria-label': tr('rp_pos'),
         oninput: function () { setPlaying(false); showFrame(Number(slider.value), false); } });
-      var when = h('div', { class: 'rp-when' }), step = h('div', { class: 'rp-step' }), log = h('div', { class: 'rp-log muted small' });
-      rpUi = { play: play, slider: slider, when: when, step: step, log: log };
+      var when = h('div', { class: 'rp-when' }), step = h('div', { class: 'rp-step' }), log = h('div', { class: 'rp-log small' });
+      var scoreBox = h('div', { class: 'rp-score', id: 'gs-rp-score' });
+      rpUi = { play: play, slider: slider, when: when, step: step, log: log, score: scoreBox };
       if (rp.empty) { play.disabled = true; slider.disabled = true; }
       return h('div', { class: 'panel replay' }, [
         h('div', { class: 'rp-row' }, [play, slider, when]),
         h('div', { class: 'rp-row' }, [range, speed, step, h('span', { class: 'grow' })]),
+        scoreBox,
         log,
         h('p', { class: 'muted small rp-note', text: tr('rp_note') })
       ]);

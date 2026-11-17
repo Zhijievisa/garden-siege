@@ -6,7 +6,7 @@
 (function (root) {
   'use strict';
   var GS = root.GS = {};
-  GS.VERSION = '1.3.1';
+  GS.VERSION = '1.3.2';
   GS.CFG_KEY = 'cfg';
   // The Power-Up's public API key (Power-Up admin → Authorization → Trello Auth). Replay is hidden while this is empty.
   GS.APP_KEY = '8bd2d0ae948399044c39bb325ead5baf';   // public client-side key of this Power-Up (not the secret)
@@ -93,11 +93,20 @@
   add('rp_loading', 'Reading the board history… {0} events', '正在读取看板历史… {0} 条');
   add('rp_none', 'No cards were created, moved or archived in this period.', '这段时间内没有卡片被新建、移动或归档。');
   add('rp_trunc', 'This board has a long history; the replay starts at {0}.', '这块看板的历史很长，回放从 {0} 开始。');
-  add('rp_step', '+{0} arrived · {1} moved · {2} left', '+{0} 出现 · {1} 移动 · {2} 离场');
+  add('rp_step', '+{0} arrived · {1} moved · {2} destroyed', '+{0} 出现 · {1} 移动 · {2} 被消灭');
+  add('rp_kill', '{0} destroyed {1}', '{0} 消灭了 {1}');
+  add('rp_kill_actor', '{0} destroyed {1} (nobody assigned; credited to whoever moved it)', '{0} 消灭了 {1}（无人负责，记给移动卡片的人）');
+  add('rp_kill_unknown', 'Destroyed, gunner unknown: {0}', '被消灭（不知道是谁）：{0}');
+  add('rp_more', '…and {0} more', '…另有 {0} 条');
+  add('rp_score', 'Destroyed so far', '累计战果');
+  add('rp_score_none', 'nothing destroyed yet', '还没有消灭敌人');
+  add('rp_score_tip', '{0} destroyed, {1} of them jointly', '消灭 {0} 个，其中 {1} 个是合力');
+  add('tb_kills', 'Destroyed', '战果');
+  add('tip_killed', 'Destroyed by', '消灭者');
   add('rp_quiet', 'Nothing moved', '没有变化');
   add('rp_gone', 'off the map', '离场');
   add('rp_new', 'new', '新出现');
-  add('rp_note', 'Replay shows where each card was. Labels, members and due dates are shown as they are today; cards that no longer exist are grey.', '回放还原的是每张卡当时所在的列。标签、成员按今天的状态显示；已不存在的卡片显示为灰色。');
+  add('rp_note', 'A unit is destroyed when its card leaves the field: to Truce, Spoils, a hidden list or the archive. Credit goes to the members assigned to the card; if nobody is assigned, to whoever moved it. Labels and members are shown as they are today.', '卡片离开战场（进入停火、战利品、隐藏的列，或被归档）即算被消灭。战果记给卡片上的负责成员；无人负责时，记给移动卡片的人。标签和成员按今天的状态显示。');
   add('rp_err', 'Could not read the board history. Try again, or reconnect in Settings.', '读取看板历史失败。请重试，或在设置里重新授权。');
   add('au_title', 'Allow Siege Line to read this board\'s history', '允许防线保卫战读取本看板的历史');
   add('au_body', 'Replay rebuilds past positions from Trello\'s activity history (cards created, moved and archived). Trello will ask you to allow read-only access for your account. Siege Line reads only this board\'s history, in your browser, and sends it nowhere.', '回放要用 Trello 的活动记录（卡片新建、移动、归档）来还原过去的位置。Trello 会请你为自己的账号授予只读权限。防线保卫战只在你的浏览器里读取本看板的历史，不会发送到任何地方。');
@@ -334,6 +343,13 @@
   // Only the kinds of activity that put a card on the board, move it between lists, or take it off.
   GS.HISTORY_FILTER = 'createCard,copyCard,convertToCardFromCheckItem,emailCard,moveCardToBoard,moveCardFromBoard,updateCard:idList,updateCard:closed,deleteCard';
   GS.MAX_PAGES = 10; // 1000 events per page
+  GS.MAX_GHOSTS = 300; // archived cards whose labels and members replay looks up
+  // Prefer the Authorization header so the token never appears in a URL; fall back to query parameters
+  // if the browser refuses the header.
+  GS._get = function (token, url) {
+    return fetch(url, { headers: { Authorization: 'OAuth oauth_consumer_key="' + GS.APP_KEY + '", oauth_token="' + token + '"' } })
+      .catch(function () { return fetch(url + '&key=' + encodeURIComponent(GS.APP_KEY) + '&token=' + encodeURIComponent(token)); });
+  };
 
   // Read-only access to the member's Trello token. The token is kept by Trello in the member's private
   // Power-Up data; a copy stays in memory for this window because browsers may block the stored one.
@@ -376,13 +392,8 @@
       if (!token || !board) { var e0 = new Error('unauthorized'); e0.code = 401; throw e0; }
       var all = [], before = null, pages = 0;
       var base = 'https://api.trello.com/1/boards/' + encodeURIComponent(board) + '/actions?filter=' + encodeURIComponent(GS.HISTORY_FILTER) +
-        '&limit=1000&fields=type,date,data&memberCreator=false&member=false&since=' + encodeURIComponent(new Date(sinceMs).toISOString());
-      function get(url) {
-        // Prefer the Authorization header so the token never appears in a URL; fall back to query parameters
-        // if the browser refuses the header.
-        return fetch(url, { headers: { Authorization: 'OAuth oauth_consumer_key="' + GS.APP_KEY + '", oauth_token="' + token + '"' } })
-          .catch(function () { return fetch(url + '&key=' + encodeURIComponent(GS.APP_KEY) + '&token=' + encodeURIComponent(token)); });
-      }
+        '&limit=1000&fields=type,date,data&memberCreator=true&memberCreator_fields=fullName,username&member=false&since=' + encodeURIComponent(new Date(sinceMs).toISOString());
+      function get(url) { return GS._get(token, url); }
       function page() {
         return get(base + (before ? '&before=' + encodeURIComponent(before) : '')).then(function (r) {
           if (r.status === 401) { var e = new Error('unauthorized'); e.code = 401; throw e; }
@@ -400,6 +411,35 @@
       }
       return page();
     });
+  };
+
+  // Labels and members of cards that are no longer open on the board (archived), so replay can draw them and
+  // credit whoever was assigned. Resolves { cardId: { labels, members } }; cards that cannot be read are left out.
+  GS.fetchCards = function (t, ids) {
+    ids = (ids || []).slice(0, GS.MAX_GHOSTS);
+    if (!ids.length) return Promise.resolve({});
+    if (GS.demo) return Promise.resolve(GS.demoGhosts(ids));
+    return GS.auth(t).token().then(function (token) {
+      var out = {}, groups = [];
+      if (!token) return out;
+      for (var i = 0; i < ids.length; i += 10) groups.push(ids.slice(i, i + 10));   // Trello's batch limit
+      function next() {
+        var g = groups.shift();
+        if (!g) return out;
+        var urls = g.map(function (id) { return encodeURIComponent('/cards/' + id + '?fields=labels&members=true&member_fields=fullName'); }).join(',');
+        return GS._get(token, 'https://api.trello.com/1/batch?urls=' + urls)
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (list) {
+            (Array.isArray(list) ? list : []).forEach(function (item) {
+              var c = item && item['200'];
+              if (c && c.id) out[c.id] = { labels: c.labels || [], members: c.members || [] };
+            });
+            return next();
+          })
+          .catch(function () { return next(); });   // replay still plays without these details
+      }
+      return next();
+    }).catch(function () { return {}; });
   };
 
   // Work backwards from today's cards through the activity (newest first) to find where every card was at the
@@ -428,7 +468,8 @@
         default: return;
       }
       state[id] = from;
-      if (from !== to) events.push({ t: when, id: id, from: from, to: to });
+      var mc = a.memberCreator;
+      if (from !== to) events.push({ t: when, id: id, from: from, to: to, by: mc && mc.id ? { id: mc.id, name: String(mc.fullName || mc.username || '?').trim() } : null });
     });
     events.reverse();
     return { initial: state, events: events, names: names };
@@ -521,7 +562,7 @@
         cards.push({ id: 'c' + n, name: pick(nouns) + ' #' + (100 + n), idList: l[0], labels: lab, members: mem, due: due ? new Date(due).toISOString() : null, dueComplete: false, shortLink: 'demo' + n });
       }
     });
-    GS._demo = { lists: L, cards: cards };
+    GS._demo = { lists: L, cards: cards, people: people, labels: labels };
     // In demo mode history access is already granted, unless the page is opened with ?auth=0.
     GS._token = /[?&]auth=0\b/.test(root.location.search || '') ? null : 'demo';
     var store = { board: {} }, renderers = [];
@@ -550,7 +591,11 @@
     var prev = { l1: 'l4', l2: 'l4', l5: 'l4', l4: 'l3', l3: 'l6', l7: 'l1', l8: 'l7', l9: 'l8', l6: null };
     var names = {}; GS._demo.lists.forEach(function (l) { names[l[0]] = l[1]; });
     var now = Date.now(), DAY = 86400000, out = [], n = 0;
-    function act(type, when, data) { n++; out.push({ id: 'a' + n, type: type, date: new Date(when).toISOString(), data: data }); }
+    function act(type, when, data) {
+      n++;
+      var who = GS._demo.people[n % GS._demo.people.length];
+      out.push({ id: 'a' + n, type: type, date: new Date(when).toISOString(), data: data, memberCreator: { id: who.id, fullName: who.fullName, username: who.username } });
+    }
     function chain(card, cur, when, stay) {
       // walk back along the pipeline from the list the card is in at `when`
       var cardRef = { id: card.id, name: card.name }, list = cur, t = when;
@@ -571,5 +616,18 @@
     }
     return out.filter(function (a) { return new Date(a.date).getTime() >= sinceMs; })
       .sort(function (a, b) { return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0); });
+  };
+  // Made-up labels and members for the demo's archived cards: some solo, some joint, some unassigned.
+  GS.demoGhosts = function (ids) {
+    GS.mockT();
+    var out = {}, P = GS._demo.people, L = GS._demo.labels;
+    (ids || []).forEach(function (id) {
+      var n = Number(String(id).slice(1));
+      if (String(id).charAt(0) !== 'g' || isNaN(n)) return;
+      var members = n % 5 === 4 ? [] : [P[n % P.length]];
+      if (members.length && n % 3 === 0) members.push(P[(n + 2) % P.length]);
+      out[id] = { labels: [L[n % L.length]], members: members };
+    });
+    return out;
   };
 })(window);

@@ -92,7 +92,8 @@ A busy board is a wall of cards. You can scroll it, but you cannot see it. Which
 ![Replay: a month of the board played back day by day](https://siege-line.pages.dev/img/replay.gif)
 
 - Click **Replay** and watch the last 7, 30 or 90 days: units appear when cards were created, advance when cards moved, and leave when cards were archived.
-- Pause, drag the slider to any day, or speed it up. Each step says what arrived, moved and left.
+- See who destroyed each unit: the guns of the members assigned to the card fire at it, their names appear over the burst, and a scoreboard counts each member's kills.
+- Pause, drag the slider to any day, or speed it up. Each step says what arrived, what moved and who destroyed what.
 - Replay needs your permission to read the board's activity history. Access is read-only and you can disconnect at any time.
 <!-- REPLAY: end -->
 

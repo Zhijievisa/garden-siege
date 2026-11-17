@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://p.trellocdn.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.trello.com; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Siege Line — Help &amp; Support</title>
-  <link rel="stylesheet" href="./ui.css?v=1.3.1">
+  <link rel="stylesheet" href="./ui.css?v=1.3.2">
 </head>
 <body>
 <div class="doc">
@@ -61,8 +61,14 @@
     read-only access to the board's activity history. Each person who wants replay does this once for themselves.</li>
     <li>Choose 7, 30 or 90 days. Use <strong>Play</strong>/<strong>Pause</strong>, the slider and the speed control.
     The line under the controls says what changed in the current step.</li>
-    <li>Replay shows <em>where</em> each card was. Labels and members are shown as they are today, due-date flags are
-    not shown, and cards that no longer exist are grey.</li>
+    <li><strong>Who destroyed what.</strong> A unit is destroyed when its card leaves the field: to Truce, Spoils,
+    a hidden list or the archive. The guns of the members assigned to that card fire at it, their names appear over
+    the burst, and the line under the controls says, for example, "Karen + Sam destroyed Contract #12". If nobody is
+    assigned to the card, the credit goes to whoever moved it.</li>
+    <li><strong>Destroyed so far</strong> counts each member's kills up to the moment shown, and the Firepower table
+    gains a <strong>Destroyed</strong> column. A unit destroyed by several members counts once for each of them.</li>
+    <li>Replay shows <em>where</em> each card was. Labels and members are shown as they are today, and due-date flags
+    are not shown. Deleted cards are grey because Trello no longer has their details.</li>
     <li>Click <strong>Back to now</strong> to return to the live map.</li>
   </ul>
 
