@@ -45,12 +45,10 @@ and put the key in `GS.APP_KEY` in `shared.js`.
 | The battle map with summary tiles and legend | `https://siege-line.pages.dev/img/battle-map.png` |
 | One member highlighted, with lines to their cards | `https://siege-line.pages.dev/img/highlight.png` |
 | Choosing a zone for each list | `https://siege-line.pages.dev/img/zones.png` |
-| Animation: replay of a month (use only when replay is switched on) | `https://siege-line.pages.dev/img/replay.gif` |
-| Replay controls, still image (use only when replay is switched on) | `https://siege-line.pages.dev/img/replay.png` |
+| Animation: replay of a month | `https://siege-line.pages.dev/img/replay.gif` |
+| Replay controls, still image | `https://siege-line.pages.dev/img/replay.png` |
 
-**Description:** Markdown, paste as is. The section between the two `REPLAY` markers describes replay; include it
-only when replay is live (an API key is set in `GS.APP_KEY`), and delete the marker lines. A listing must not
-describe a feature the reviewer cannot find.
+**Description:** Markdown, paste as is.
 
 ```
 Siege Line is for teams whose Trello board has grown past what anyone can take in at a glance: agencies, law and migration practices, support desks, studios, anyone with dozens or hundreds of open cards. It redraws the whole board as one battle map. Every card is an enemy unit advancing on your headquarters, every board member is a gun defending it, and the nearer a unit is to headquarters, the sooner it needs you.
@@ -86,7 +84,6 @@ A busy board is a wall of cards. You can scroll it, but you cannot see it. Which
 - The Firepower table counts each member's cards in every zone, and lists the cards nobody has picked up.
 - Hover over a unit for the card's details. Click it to open the card.
 
-<!-- REPLAY: start -->
 ## Replay the last weeks
 
 ![Replay: a month of the board played back day by day](https://siege-line.pages.dev/img/replay.gif)
@@ -95,7 +92,6 @@ A busy board is a wall of cards. You can scroll it, but you cannot see it. Which
 - See who destroyed each unit: the guns of the members assigned to the card fire at it, their names appear over the burst, and a scoreboard counts each member's kills.
 - Pause, drag the slider to any day, or speed it up. Each step says what arrived, what moved and who destroyed what.
 - Replay needs your permission to read the board's activity history. Access is read-only and you can disconnect at any time.
-<!-- REPLAY: end -->
 
 ## Why use it
 
@@ -114,7 +110,7 @@ A busy board is a wall of cards. You can scroll it, but you cannot see it. Which
 
 ## Your data stays in Trello
 
-Siege Line reads the board in your browser to draw the picture. It does not change your cards. The only thing it saves is its own settings, on your board. There is no external server, no separate account to create, no analytics and no tracking.
+Siege Line reads the board in your browser to draw the picture. It does not change your cards. The only thing it saves is its own settings, on your board. Replay is optional and uses read-only access that you grant through Trello; the history is read in your browser and sent nowhere. There is no external server, no separate account to create, no analytics and no tracking.
 
 ## Good to know
 
