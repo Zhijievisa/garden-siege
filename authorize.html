@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Garden Siege — history access</title>
+  <link rel="stylesheet" href="./ui.css">
+</head>
+<body>
+  <div id="gs-root" class="gs pad"></div>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <script src="./shared.js"></script>
+  <script src="./authorize.js"></script>
+  <script>
+    (function () {
+      var t = GS.getT();
+      GS.applyTheme(t);
+      GS.mountAuthorize(t, document.getElementById('gs-root'));
+    })();
+  </script>
+</body>
+</html>
