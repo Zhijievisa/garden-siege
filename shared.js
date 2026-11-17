@@ -53,6 +53,7 @@
   add('st_ung', 'Unguarded', '无人防守');
 
   add('lg_types', 'Unit types (first label)', '兵种（按第一个标签）');
+  add('lg_more', '{0} and {1} more', '{0} 等 {1} 个标签');
   add('lg_other', 'Other labels', '其他标签');
   add('lg_none', 'No label', '无标签');
   add('lg_soon', 'Due soon', '即将到期');
@@ -215,6 +216,19 @@
     return name.slice(0, 3).toUpperCase();
   };
 
+  // Labels that share a number ("482 General", "482 DAMA") or a first word ("Bug: UI", "Bug: API") are one type,
+  // so a board with many label variants still gets a handful of unit kinds.
+  GS.typeKey = function (label) {
+    var name = String((label && label.name) || '').trim();
+    if (!name) return { key: 'color:' + String((label && label.color) || 'none'), group: null };
+    var m = name.match(/(^|[^\d])(\d{3,4})(?!\d)/);
+    if (m) return { key: 'n:' + m[2], group: null };
+    var cjk = name.match(/^[\u3400-\u9fff]+/);
+    if (cjk) return { key: 'w:' + cjk[0], group: cjk[0] };
+    var word = name.match(/^[A-Za-z0-9]+/);
+    return word ? { key: 'w:' + word[0].toLowerCase(), group: null } : { key: 'l:' + name.toLowerCase(), group: null };
+  };
+
   /* ---------- the board model ---------- */
   // lists: [{id,name}], cards: [{id,name,idList,labels,members,due,dueComplete}] as returned by t.lists / t.cards.
   // `fixed` (optional) is an earlier model: its types and members keep their colours, order and badges, so a
@@ -231,16 +245,19 @@
     var typeMap = {}, memberMap = {}, zones = {}, all = [];
     GS.ZONES.forEach(function (z) { zones[z] = []; });
     if (fixed) {
-      fixed.types.forEach(function (t) { typeMap[t.key] = { key: t.key, name: t.name, tcolor: t.tcolor, badge: t.badge, count: 0, rank: t.rank, top: t.top, color: t.color, kind: t.kind }; });
+      fixed.types.forEach(function (t) { typeMap[t.key] = { key: t.key, name: t.name, tcolor: t.tcolor, badge: t.badge, count: 0, rank: t.rank, top: t.top, color: t.color, kind: t.kind, variants: t.variants }; });
       fixed.members.forEach(function (m) { memberMap[m.id] = { id: m.id, name: m.name, counts: {}, total: 0, front: 0, color: m.color, design: m.design, short: m.short }; });
     }
     (cards || []).forEach(function (c) {
       var z = zoneOf[c.idList];
       if (!z || z === 'x') return;
       var labels = (c.labels || []).filter(Boolean), first = labels[0];
-      var key = first ? (first.id || first.name || first.color || 'label') : '';
-      if (first && !typeMap[key]) typeMap[key] = { key: key, name: first.name || first.color || '', tcolor: GS.trelloColor(first.color), badge: GS.badgeOf(first), count: 0 };
-      if (first) typeMap[key].count++;
+      var tk = first ? GS.typeKey(first) : null, key = tk ? tk.key : '';
+      if (first && !typeMap[key]) typeMap[key] = { key: key, name: first.name || first.color || '', group: tk.group, tcolor: GS.trelloColor(first.color), badge: GS.badgeOf(first), count: 0, names: {} };
+      if (first) {
+        typeMap[key].count++;
+        if (typeMap[key].names) { var ln = first.name || first.color || ''; typeMap[key].names[ln] = (typeMap[key].names[ln] || 0) + 1; }
+      }
       var state = '';
       if (c.due && !c.dueComplete) {
         var days = (new Date(c.due).getTime() - now) / 86400000;
@@ -259,6 +276,15 @@
 
     // Types: most common first. Use Trello's own label colours only if the top types are told apart by them.
     var types = Object.keys(typeMap).map(function (k) { return typeMap[k]; });
+    // name each type after its most common label; a type made of several labels remembers them all
+    types.forEach(function (t) {
+      if (!t.names) return;
+      var all = Object.keys(t.names).sort(function (a, b) { return t.names[b] - t.names[a] || (a < b ? -1 : 1); });
+      if (!all.length) return;
+      t.variants = all;
+      t.badge = GS.badgeOf({ name: all[0] });
+      t.name = all.length > 1 && t.group ? t.group : all[0];
+    });
     if (fixed) {
       types.sort(function (a, b) { return (a.rank === undefined ? 1e6 : a.rank) - (b.rank === undefined ? 1e6 : b.rank); });
       types.forEach(function (t, i) { if (t.rank === undefined) { t.rank = 1e5 + i; t.top = false; t.color = GS.OTHER_COLOR; t.kind = 'truck'; } });

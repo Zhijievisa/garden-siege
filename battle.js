@@ -547,8 +547,9 @@
         var s = live.stats;
         var icon = function (kind, color) { var el = h('span', { class: 'ico' }); el.innerHTML = GS.unitIcon(kind, color); return el; };
         var chips = live.types.filter(function (x) { return x.top; }).map(function (x) {
-          return h('button', { class: 'chip', type: 'button', 'data-t': x.key, 'aria-pressed': 'false', onclick: function () { toggle('type', x.key); } },
-            [icon(x.kind, x.color), h('span', { text: (x.badge !== x.name ? x.badge + ' · ' : '') + cut(x.name || '?', 26) }), h('b', { text: String(x.count) })]);
+          var many = x.variants && x.variants.length > 1;
+          return h('button', { class: 'chip', type: 'button', 'data-t': x.key, 'aria-pressed': 'false', title: many ? x.variants.join(', ') : null, onclick: function () { toggle('type', x.key); } },
+            [icon(x.kind, x.color), h('span', { text: (x.badge !== x.name ? x.badge + ' · ' : '') + (many ? tr('lg_more', cut(x.name || '?', 22), x.variants.length - 1) : cut(x.name || '?', 26)) }), h('b', { text: String(x.count) })]);
         });
         var extra = function (id, color, text, n) {
           return h('button', { class: 'chip', type: 'button', 'data-t': id, 'aria-pressed': 'false', onclick: function () { toggle('type', id); } }, [icon(id === '__other' ? 'truck' : 'infantry', color), h('span', { text: text }), h('b', { text: String(n) })]);

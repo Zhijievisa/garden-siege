@@ -11,7 +11,7 @@ Version 1.1.0 · English and 简体中文
   Truce (awaiting an outcome), Spoils (money to collect) or Hidden. Until zones are chosen they are guessed from
   list names.
 - **Unit types from labels.** A card's first label decides what it is: tank, jet, attack helicopter, infantry,
-  armoured car, bomber, drone, rocket truck or jeep, with its own colour and badge.
+  armoured car, bomber, drone, rocket truck or jeep, with its own colour and badge. Labels that share a number or a first word count as one type.
 - **Guns from members.** Each member is an artillery piece. Dots under a unit are the members assigned to it. A
   red dashed ring means nobody is.
 - **Due dates.** Orange flag for due soon, red flag for overdue.
