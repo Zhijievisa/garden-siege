@@ -3,7 +3,7 @@
 A Trello Power-Up that draws a board as a battle map. Every card is an enemy unit advancing on your headquarters;
 every board member is a gun defending it. The nearer a unit is to headquarters, the sooner it needs you.
 
-Version 1.3.3 · English and 简体中文
+Version 1.3.4 · English and 简体中文
 
 ## What it shows
 
@@ -75,6 +75,8 @@ and style URLs in every `.html` file together, so users get one consistent set o
 - Artwork is original to this project.
 
 ## Changelog
+
+**1.3.4** Review fix: `style-src` now allows inline styles, because Trello's Power-Up library (`power-up.min.js`) injects them and the stricter policy logged console errors; `script-src` is unchanged (no inline script, no eval). The `<meta>` copy of the policy is removed, so the response header in `_headers` is the only policy and a violation is reported once.
 
 **1.3.3** Medals: one for every unit destroyed, shown on each gun; the gun with the most medals wears a crown.
 
